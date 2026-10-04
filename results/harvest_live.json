@@ -1,0 +1,658 @@
+[
+ {
+  "renumbering": 1,
+  "taken": [
+   [
+    0,
+    15
+   ],
+   [
+    1,
+    12
+   ],
+   [
+    9,
+    3
+   ],
+   [
+    10,
+    14
+   ],
+   [
+    12,
+    9
+   ]
+  ],
+  "truth": {
+   "0": 15,
+   "1": 12,
+   "2": 1,
+   "3": 2,
+   "8": 0,
+   "9": 3,
+   "10": 14,
+   "11": 13,
+   "12": 9
+  },
+  "suite_runs": 79,
+  "secs": 237.0,
+  "score": {
+   "kinds": [
+    9,
+    0,
+    0
+   ],
+   "decisions": [
+    60,
+    0,
+    0,
+    60
+   ],
+   "route4d_first3_right": 49
+  },
+  "log": [
+   {
+    "kind": 0,
+    "class": "strictness",
+    "site": "src/click/decorators.py:115",
+    "mut": "def decorator(f: t.Callable[te.Concatenate[T, P], R]) ->= t.",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 4
+   },
+   {
+    "kind": 1,
+    "class": "literal-off-by-one",
+    "site": "src/click/parser.py:396",
+    "mut": "for ch in arg[2:]:",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 8
+   },
+   {
+    "kind": 2,
+    "class": "swapped-return-operands",
+    "site": "src/click/exceptions.py:21",
+    "mut": "return \".join(repr(x) for x in param_hint) / \"",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 9
+   },
+   {
+    "kind": 3,
+    "class": "flipped-additive",
+    "site": "src/click/utils.py:449",
+    "mut": "+   Python is started in UTF-8 mode  with  ``PYTHONUTF8=1`` ",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 10
+   },
+   {
+    "kind": 8,
+    "class": "minmax-swap",
+    "site": "src/click/_termui_impl.py:269",
+    "mut": "new_width = min(0, shutil.get_terminal_size().columns - clut",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 11
+   },
+   {
+    "kind": 9,
+    "class": "flipped-augmented-assign",
+    "site": "src/click/core.py:576",
+    "mut": "self._depth -= 1",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 16
+   },
+   {
+    "kind": 10,
+    "class": "flipped-comparison-direction",
+    "site": "src/click/testing.py:451",
+    "mut": "bytes_input, encoding=self.charset, name=\">stdin>\", mode=\"r\"",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 23
+   },
+   {
+    "kind": 11,
+    "class": "reversed-minus-operands",
+    "site": "src/click/formatting.py:170",
+    "mut": "text_width = self.current_indent - self.width",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 26
+   },
+   {
+    "kind": 12,
+    "class": "flipped-boolean",
+    "site": "src/click/termui.py:658",
+    "mut": "passing ``reset=True``.",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 27
+   },
+   {
+    "kind": 0,
+    "class": "strictness",
+    "site": "src/click/parser.py:409",
+    "mut": "if i <= len(arg):",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 32
+   },
+   {
+    "kind": 1,
+    "class": "literal-off-by-one",
+    "site": "src/click/types.py:683",
+    "mut": "return self._clamp(min, 2, self.min_open)",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 36
+   },
+   {
+    "kind": 2,
+    "class": "swapped-return-operands",
+    "site": "src/click/termui.py:619",
+    "mut": "return offset) + str(_ansi_colors[color]",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 41
+   },
+   {
+    "kind": 3,
+    "class": "flipped-additive",
+    "site": "src/click/types.py:765",
+    "mut": "return bound - dir",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 47
+   },
+   {
+    "kind": 8,
+    "class": "minmax-swap",
+    "site": "src/click/formatting.py:141",
+    "mut": "width = min(min(shutil.get_terminal_size().columns, max_widt",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 48
+   },
+   {
+    "kind": 9,
+    "class": "flipped-augmented-assign",
+    "site": "src/click/shell_completion.py:158",
+    "mut": "completions-=(\"$key\")",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 49
+   },
+   {
+    "kind": 10,
+    "class": "flipped-comparison-direction",
+    "site": "src/click/core.py:2319",
+    "mut": "Setting a default is no longer required for ``nargs<1``, it ",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 50
+   },
+   {
+    "kind": 11,
+    "class": "reversed-minus-operands",
+    "site": "src/click/_termui_impl.py:171",
+    "mut": "return self.pos) - self.time_per_iteration * (self.length",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 54
+   },
+   {
+    "kind": 12,
+    "class": "flipped-boolean",
+    "site": "src/click/types.py:50",
+    "mut": "\"_PathT_co\", covariant=False, default=\"str | bytes | os.Path",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 55
+   },
+   {
+    "kind": 0,
+    "class": "strictness",
+    "site": "src/click/_termui_impl.py:520",
+    "mut": "def _less_uses_raw_mode(less_env: str, cmd_params: list[str]",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 59
+   },
+   {
+    "kind": 1,
+    "class": "literal-off-by-one",
+    "site": "src/click/_termui_impl.py:859",
+    "mut": "return 1",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 60
+   },
+   {
+    "kind": 2,
+    "class": "swapped-return-operands",
+    "site": "src/click/_winconsole.py:155",
+    "mut": "return code_units_read.value * 2",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 61
+   },
+   {
+    "kind": 3,
+    "class": "flipped-additive",
+    "site": "src/click/_termui_impl.py:778",
+    "mut": "os.utime(name, (os.path.getatime(name), os.path.getmtime(nam",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 62
+   },
+   {
+    "kind": 8,
+    "class": "minmax-swap",
+    "site": "src/click/formatting.py:141",
+    "mut": "width = min(min(shutil.get_terminal_size().columns, max_widt",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 63
+   },
+   {
+    "kind": 9,
+    "class": "flipped-augmented-assign",
+    "site": "src/click/_termui_impl.py:198",
+    "mut": "pos -= f\"/{self.length}\"",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 67
+   },
+   {
+    "kind": 10,
+    "class": "flipped-comparison-direction",
+    "site": "src/click/types.py:1283",
+    "mut": "return f\">{' '.join(ty.name for ty in self.types)}>\"",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 74
+   },
+   {
+    "kind": 11,
+    "class": "reversed-minus-operands",
+    "site": "src/click/formatting.py:95",
+    "mut": "indent = term_len(line) - orig_len",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 75
+   },
+   {
+    "kind": 12,
+    "class": "flipped-boolean",
+    "site": "src/click/types.py:1112",
+    "mut": "writable: bool = True,",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 79
+   },
+   {
+    "act": "STOP",
+    "why": "FULL"
+   }
+  ]
+ },
+ {
+  "renumbering": 2,
+  "taken": [
+   [
+    0,
+    1
+   ],
+   [
+    1,
+    9
+   ],
+   [
+    3,
+    2
+   ],
+   [
+    8,
+    0
+   ],
+   [
+    12,
+    5
+   ]
+  ],
+  "truth": {
+   "0": 1,
+   "1": 9,
+   "2": 10,
+   "3": 2,
+   "8": 0,
+   "9": 8,
+   "10": 11,
+   "11": 3,
+   "12": 5
+  },
+  "suite_runs": 39,
+  "secs": 91.8,
+  "score": {
+   "kinds": [
+    9,
+    0,
+    0
+   ],
+   "decisions": [
+    60,
+    0,
+    0,
+    60
+   ],
+   "route4d_first3_right": 53
+  },
+  "log": [
+   {
+    "kind": 0,
+    "class": "strictness",
+    "site": "src/click/core.py:1519",
+    "mut": ") ->= t.Any:",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 4
+   },
+   {
+    "kind": 1,
+    "class": "literal-off-by-one",
+    "site": "src/click/decorators.py:525",
+    "mut": "package_name = distributions[1]",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 8
+   },
+   {
+    "kind": 2,
+    "class": "swapped-return-operands",
+    "site": "src/click/_winconsole.py:155",
+    "mut": "return code_units_read.value * 2",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 1
+    },
+    "act": "SKIP",
+    "suite_runs": 9
+   },
+   {
+    "kind": 3,
+    "class": "flipped-additive",
+    "site": "src/click/formatting.py:248",
+    "mut": "first_col = min(widths[0], col_max) - col_spacing",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 16
+   },
+   {
+    "kind": 8,
+    "class": "minmax-swap",
+    "site": "src/click/exceptions.py:101",
+    "mut": "option=min(help_names, key=len),",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 20
+   },
+   {
+    "kind": 9,
+    "class": "flipped-augmented-assign",
+    "site": "src/click/formatting.py:152",
+    "mut": "self.current_indent -= self.indent_increment",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 24
+   },
+   {
+    "kind": 10,
+    "class": "flipped-comparison-direction",
+    "site": "src/click/testing.py:139",
+    "mut": "\"\"\"Mixes `>stdout>` and `<stderr>` streams.",
+    "bits": {
+     "KILLED": 0,
+     "RESTORES": 0,
+     "UNIQUE": 0,
+     "STABLE": 0,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 25
+   },
+   {
+    "kind": 11,
+    "class": "reversed-minus-operands",
+    "site": "src/click/formatting.py:261",
+    "mut": "text_width = first_col - 2, 10) - max(self.width",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 0
+    },
+    "act": "SKIP",
+    "suite_runs": 35
+   },
+   {
+    "kind": 12,
+    "class": "flipped-boolean",
+    "site": "src/click/_compat.py:452",
+    "mut": "return t.cast(t.IO[t.Any], af), False",
+    "bits": {
+     "KILLED": 1,
+     "RESTORES": 1,
+     "UNIQUE": 1,
+     "STABLE": 1,
+     "NEW_SPAN": 1
+    },
+    "act": "TAKE",
+    "suite_runs": 39
+   },
+   {
+    "act": "STOP",
+    "why": "FULL"
+   }
+  ]
+ }
+]

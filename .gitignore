@@ -1,0 +1,10 @@
+bench/
+.build/
+.venv/
+__pycache__/
+*.pyc
+*.so
+*.egg-info/
+.pytest_cache/
+.coverage
+/bench

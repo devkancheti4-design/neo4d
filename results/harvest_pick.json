@@ -1,0 +1,182 @@
+[
+ {
+  "renumbering": 1,
+  "body_rule_runs": 79,
+  "body_rule_trials": 27,
+  "pick_runs": 20,
+  "pick_trials": 5,
+  "taken": [
+   [
+    9,
+    3
+   ],
+   [
+    1,
+    12
+   ],
+   [
+    12,
+    9
+   ],
+   [
+    3,
+    2
+   ],
+   [
+    0,
+    15
+   ]
+  ],
+  "score": {
+   "kinds": [
+    9,
+    0,
+    0
+   ],
+   "decisions": [
+    60,
+    0,
+    0,
+    60
+   ],
+   "route4d_first3_right": 37,
+   "route4d5": [
+    60,
+    0,
+    0
+   ]
+  },
+  "secs": 66.0,
+  "log": [
+   {
+    "class": "flipped-augmented-assign",
+    "site": "src/click/_termui_impl.py:198",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 4
+   },
+   {
+    "class": "literal-off-by-one",
+    "site": "src/click/_termui_impl.py:342",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 8
+   },
+   {
+    "class": "flipped-boolean",
+    "site": "src/click/_termui_impl.py:584",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 12
+   },
+   {
+    "class": "flipped-additive",
+    "site": "src/click/_termui_impl.py:587",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 16
+   },
+   {
+    "class": "strictness",
+    "site": "src/click/core.py:1880",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 20
+   },
+   {
+    "act": "STOP",
+    "why": "FULL"
+   }
+  ]
+ },
+ {
+  "renumbering": 2,
+  "body_rule_runs": 39,
+  "body_rule_trials": 9,
+  "pick_runs": 20,
+  "pick_trials": 5,
+  "taken": [
+   [
+    9,
+    8
+   ],
+   [
+    1,
+    9
+   ],
+   [
+    12,
+    5
+   ],
+   [
+    3,
+    2
+   ],
+   [
+    0,
+    1
+   ]
+  ],
+  "score": {
+   "kinds": [
+    9,
+    0,
+    0
+   ],
+   "decisions": [
+    60,
+    0,
+    0,
+    60
+   ],
+   "route4d_first3_right": 37,
+   "route4d5": [
+    60,
+    0,
+    0
+   ]
+  },
+  "secs": 64.8,
+  "log": [
+   {
+    "class": "flipped-augmented-assign",
+    "site": "src/click/_termui_impl.py:198",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 4
+   },
+   {
+    "class": "literal-off-by-one",
+    "site": "src/click/_termui_impl.py:342",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 8
+   },
+   {
+    "class": "flipped-boolean",
+    "site": "src/click/_termui_impl.py:584",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 12
+   },
+   {
+    "class": "flipped-additive",
+    "site": "src/click/_termui_impl.py:587",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 16
+   },
+   {
+    "class": "strictness",
+    "site": "src/click/core.py:1880",
+    "pick": 12,
+    "act": "TAKE",
+    "suite_runs": 20
+   },
+   {
+    "act": "STOP",
+    "why": "FULL"
+   }
+  ]
+ }
+]
