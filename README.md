@@ -43,6 +43,9 @@ Stress tests (`results/`):
 |---|---|
 | obfuscation (`neo4d quixbugs`): 396 names hashed, 1,950 dead statements, formatting stripped | same repair outcome on **40/40** QuixBugs programs; 5 repaired, 1 ambiguous (refused), 34 out of vocabulary |
 | ghost-space queries (`neo4d adversarial`): 20,000 queries one bit outside a rank-3 span | neo4d refuses **100%**, wrong **0%**; a nearest-example heuristic is wrong 93.5% |
+| noise (`neo4d robustness`): 10 to 10,000 irrelevant fields around the query | **0** answers changed; 5.4-6.2 ns per query (read + route), flat; noise never reaches the router |
+| encodings (`neo4d robustness`): codes in IEEE 754 float mantissas; relabellings over GF(16) | **100% right, 0% wrong** for both; a non-affine truth (random permutation) is wrong 38.6% - the structure's limit, stated |
+| a million mixed calls in one process (`neo4d robustness`) | **0** differences vs reverse order, shuffled order and a fresh process; 0 vs brute force on 100,000; no writable section in the object |
 | silicon (`neo4d silicon`): the compiled router, M4 Pro | 91 instructions, **0 conditional branches, 0 memory ops**; 93 instructions in 16.2 cycles per call, **IPC 5.75, 3.95 ns** |
 
 Each law's specification is in `prompts/` - bits, principles, the measurement that motivated it - and each judge

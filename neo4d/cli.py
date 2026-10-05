@@ -13,6 +13,7 @@
     neo4d adversarial         ghost-space queries: neo4d against a guessing heuristic
     neo4d silicon             the router's machine code and hardware counters (IPC, branches, memory ops)
     neo4d quixbugs            QuixBugs repair, original and obfuscated (needs bench/)
+    neo4d robustness          noise around the query, other encodings, a million calls in one process
     neo4d prompts             regenerate the swarm-law prompts
 
 Everything that needs benchmark data reads bench/, fetched by scripts/fetch_bench.sh.
@@ -62,14 +63,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest
