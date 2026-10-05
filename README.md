@@ -36,6 +36,15 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | a ghost query (rank-3 span) | any guess right at most **1/8**; neo4d wrong **0** |
 | test runs to learn one relabelling | neo4d **20**, structure-free 60, every kind 64 |
 
+## Its inductive bias (`neo4d inductive`, `results/INDUCTIVE.md`)
+
+| test | result |
+|---|---|
+| shootout: a random affine relabelling from N examples, unseen codes | neo4d **100% right, 0% wrong from N = 5** (refuses what is undetermined below 5); a 3-layer MLP and a small Transformer, trained on the same N and predicting the output bits: **0-12% right at every N up to 15** |
+| shard: affinity broken by degree eps = 0 ... 1 | neo4d exact at eps = 0, settling at the exact 3/13 / 5/13 / 5/13 by eps = 0.6; the MLP is wrong on 98-99% of unseen codes throughout |
+| active vs passive: examples until pinned | active (new direction only) **5, always** - the minimum possible; passive expected **215/39 = 5.51** (simulated 5.51) |
+| out-of-distribution: five examples in the top-bit-0 subspace, a query with it set | refused **100%**, wrong **0%** |
+
 ## The laws - authored externally, judged here
 
 | law | decides | judged |
