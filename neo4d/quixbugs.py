@@ -1,0 +1,157 @@
+"""QuixBugs (Python): neo4d's repair on the 40 programs, original and obfuscated - the obfuscation-resistance test.
+
+For each program: its own tests must fail on the buggy version (red). Every candidate the vocabulary proposes on every
+line is tried against those tests; a program counts as REPAIRED when exactly one distinct candidate program turns
+them green, AMBIGUOUS when several do (fluidnet ships only a unique fix), REFUSED when none does.
+
+The same run on an obfuscated copy (neo4d.obfuscate: hash-named variables, no docstrings or comments, re-emitted
+formatting, dead code after every statement) - first checking that every obfuscated CORRECT program still passes.
+
+    python -m neo4d.quixbugs   -> results/QUIXBUGS.md
+"""
+from __future__ import annotations
+
+import json
+import multiprocessing as mp
+import shutil
+import subprocess
+import sys
+import time
+from collections import Counter
+from pathlib import Path
+
+from neo4d import REPO
+from neo4d import classes as C
+from neo4d.obfuscate import obfuscate
+
+QB = REPO / "bench" / "QuixBugs"
+PY = REPO / "bench" / "tvenv" / "bin" / "python"
+def _vocab():
+    v = {c.kind: c for c in C.shipped()}
+    demo = {c.name: c for c in C.demo_taught()}
+    v[4], v[7] = demo["wrong-attribute-sibling"], demo["len-as-last-index"]
+    return dict(sorted(v.items()))
+
+
+VOCAB = _vocab()
+
+
+def programs():
+    return sorted(p.stem[5:] for p in (QB / "python_testcases").glob("test_*.py"))
+
+
+def build(variant: str) -> tuple[Path, dict]:
+    d = REPO / "bench" / f"qb_{variant}"
+    if d.exists():
+        shutil.rmtree(d)
+    shutil.copytree(QB, d, ignore=shutil.ignore_patterns(".git", "java_*", "correct_java_programs", "*.class"))
+    stats = Counter()
+    if variant == "obfuscated":
+        for folder in ("python_programs", "correct_python_programs"):
+            for name in programs():
+                p = d / folder / f"{name}.py"
+                if p.exists():
+                    out, st = obfuscate(p.read_text())
+                    p.write_text(out)
+                    stats["renamed"] += st["renamed"]
+                    stats["dead_statements"] += st["dead_statements"]
+    return d, dict(stats)
+
+
+def green(d: Path, name: str, correct: bool = False) -> bool:
+    cmd = [str(PY), "-m", "pytest", f"python_testcases/test_{name}.py", "-q", "-x", "-p", "no:cacheprovider",
+           "--timeout=3"] + (["--correct"] if correct else [])
+    try:
+        return subprocess.run(cmd, cwd=d, capture_output=True, timeout=120).returncode == 0
+    except subprocess.TimeoutExpired:
+        return False
+
+
+def repair(args):
+    d, name, cap = args
+    p = d / "python_programs" / f"{name}.py"
+    orig = p.read_text()
+    res = {"program": name, "correct_passes": green(d, name, correct=True)}
+    if green(d, name):
+        res["outcome"] = "not red"
+        return res
+    lines = orig.split("\n")
+    greens, runs, seen = [], 0, set()
+    try:
+        for i, line in enumerate(lines):
+            if not line.strip():
+                continue
+            for k, cls in VOCAB.items():
+                for cand in cls.candidates(line, i + 1, lines):
+                    prog = "\n".join(lines[:i] + [cand] + lines[i + 1:])
+                    if prog in seen:
+                        continue
+                    seen.add(prog)
+                    if runs >= cap:
+                        break
+                    runs += 1
+                    p.write_text(prog)
+                    if green(d, name):
+                        greens.append({"line": i + 1, "class": cls.name, "before": line.strip(), "after": cand.strip()})
+                    if len({g["after"] + str(g["line"]) for g in greens}) >= 2:
+                        break
+                if len(greens) >= 2 or runs >= cap:
+                    break
+            if len(greens) >= 2 or runs >= cap:
+                break
+    finally:
+        p.write_text(orig)
+    res.update(runs=runs, greens=greens,
+               outcome="repaired" if len(greens) == 1 else ("ambiguous" if greens else "refused"))
+    return res
+
+
+def run(variant: str, cap: int = 300, workers: int = 8):
+    d, stats = build(variant)
+    t0 = time.time()
+    with mp.Pool(workers) as pool:
+        rows = pool.map(repair, [(d, n, cap) for n in programs()])
+    return rows, stats, time.time() - t0
+
+
+def main() -> int:
+    out_rows = {}
+    stats = {}
+    for variant in ("original", "obfuscated"):
+        rows, st, secs = run(variant)
+        out_rows[variant] = {r["program"]: r for r in rows}
+        stats[variant] = (st, secs)
+        c = Counter(r["outcome"] for r in rows)
+        print(f"  {variant:10} {dict(c)}  correct versions passing: {sum(r['correct_passes'] for r in rows)}/{len(rows)}"
+              f"  ({secs:.0f}s)", flush=True)
+    names = programs()
+    same = [n for n in names if out_rows["original"][n]["outcome"] == out_rows["obfuscated"][n]["outcome"]]
+    lines = ["# QuixBugs - neo4d's repair, original and obfuscated", "",
+             "Generated by `neo4d/quixbugs.py`. 40 real programs, each with one real bug; a repair counts only if the "
+             "program's own tests pass, and only when exactly one distinct candidate does. Vocabulary: fluidfix's nine "
+             "shipped classes and fluidnet's two taught demo classes.", "",
+             f"Obfuscation: {stats['obfuscated'][0].get('renamed', 0)} parameters and locals renamed to hash names, "
+             f"{stats['obfuscated'][0].get('dead_statements', 0):,} dead statements injected, docstrings, comments and "
+             "formatting stripped.", "",
+             "| | repaired | ambiguous | refused | not red | correct versions still passing |", "|---|---|---|---|---|---|"]
+    for v in ("original", "obfuscated"):
+        rows = out_rows[v].values()
+        c = Counter(r["outcome"] for r in rows)
+        lines.append(f"| {v} | **{c['repaired']}** | {c['ambiguous']} | {c['refused']} | {c['not red']} | "
+                     f"{sum(r['correct_passes'] for r in rows)}/40 |")
+    lines += ["", f"**Same outcome on {len(same)} of 40 programs.**", "",
+              "| program | original | obfuscated | the repair |", "|---|---|---|---|"]
+    for n in names:
+        a, b = out_rows["original"][n], out_rows["obfuscated"][n]
+        fix = (a.get("greens") or b.get("greens") or [{}])[0]
+        desc = f"`{fix.get('before', '')}` -> `{fix.get('after', '')}` ({fix.get('class', '')})" if fix else ""
+        if a["outcome"] in ("repaired", "ambiguous") or b["outcome"] in ("repaired", "ambiguous") or a["outcome"] != b["outcome"]:
+            lines.append(f"| {n} | {a['outcome']} | {b['outcome']} | {desc} |")
+    (REPO / "results" / "QUIXBUGS.md").write_text("\n".join(lines) + "\n")
+    (REPO / "results" / "quixbugs.json").write_text(json.dumps(out_rows, indent=1))
+    print("\n".join(lines))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

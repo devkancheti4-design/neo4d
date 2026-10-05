@@ -1,0 +1,662 @@
+{
+ "original": {
+  "bitcount": {
+   "program": "bitcount",
+   "correct_passes": true,
+   "runs": 16,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "breadth_first_search": {
+   "program": "breadth_first_search",
+   "correct_passes": true,
+   "runs": 11,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "bucketsort": {
+   "program": "bucketsort",
+   "correct_passes": true,
+   "runs": 8,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "depth_first_search": {
+   "program": "depth_first_search",
+   "correct_passes": true,
+   "runs": 2,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "detect_cycle": {
+   "program": "detect_cycle",
+   "correct_passes": true,
+   "runs": 3,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "find_first_in_sorted": {
+   "program": "find_first_in_sorted",
+   "correct_passes": true,
+   "runs": 27,
+   "greens": [
+    {
+     "line": 5,
+     "class": "strictness",
+     "before": "while lo <= hi:",
+     "after": "while lo < hi:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "find_in_sorted": {
+   "program": "find_in_sorted",
+   "correct_passes": true,
+   "runs": 24,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "flatten": {
+   "program": "flatten",
+   "correct_passes": true,
+   "runs": 13,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "gcd": {
+   "program": "gcd",
+   "correct_passes": true,
+   "runs": 7,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "get_factors": {
+   "program": "get_factors",
+   "correct_passes": true,
+   "runs": 29,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "hanoi": {
+   "program": "hanoi",
+   "correct_passes": true,
+   "runs": 28,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "is_valid_parenthesization": {
+   "program": "is_valid_parenthesization",
+   "correct_passes": true,
+   "runs": 18,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "kheapsort": {
+   "program": "kheapsort",
+   "correct_passes": true,
+   "runs": 48,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "knapsack": {
+   "program": "knapsack",
+   "correct_passes": true,
+   "runs": 36,
+   "greens": [
+    {
+     "line": 12,
+     "class": "strictness",
+     "before": "if weight < j:",
+     "after": "if weight <= j:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "kth": {
+   "program": "kth",
+   "correct_passes": true,
+   "runs": 21,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "lcs_length": {
+   "program": "lcs_length",
+   "correct_passes": true,
+   "runs": 16,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "levenshtein": {
+   "program": "levenshtein",
+   "correct_passes": true,
+   "runs": 21,
+   "greens": [
+    {
+     "line": 6,
+     "class": "literal-off-by-one",
+     "before": "return 1 + levenshtein(source[1:], target[1:])",
+     "after": "return 0 + levenshtein(source[1:], target[1:])"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "lis": {
+   "program": "lis",
+   "correct_passes": true,
+   "runs": 27,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "longest_common_subsequence": {
+   "program": "longest_common_subsequence",
+   "correct_passes": true,
+   "runs": 12,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "max_sublist_sum": {
+   "program": "max_sublist_sum",
+   "correct_passes": true,
+   "runs": 23,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "mergesort": {
+   "program": "mergesort",
+   "correct_passes": true,
+   "runs": 21,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "minimum_spanning_tree": {
+   "program": "minimum_spanning_tree",
+   "correct_passes": true,
+   "runs": 21,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "next_palindrome": {
+   "program": "next_palindrome",
+   "correct_passes": true,
+   "runs": 44,
+   "greens": [
+    {
+     "line": 15,
+     "class": "len-as-last-index",
+     "before": "return [1] + (len(digit_list)) * [0] + [1]",
+     "after": "return [1] + (len(digit_list) - 1) * [0] + [1]"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "next_permutation": {
+   "program": "next_permutation",
+   "correct_passes": true,
+   "runs": 29,
+   "greens": [
+    {
+     "line": 6,
+     "class": "flipped-comparison-direction",
+     "before": "if perm[j] < perm[i]:",
+     "after": "if perm[j] > perm[i]:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "pascal": {
+   "program": "pascal",
+   "correct_passes": true,
+   "runs": 42,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "possible_change": {
+   "program": "possible_change",
+   "correct_passes": true,
+   "runs": 60,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "powerset": {
+   "program": "powerset",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "quicksort": {
+   "program": "quicksort",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [
+    {
+     "line": 6,
+     "class": "strictness",
+     "before": "lesser = quicksort([x for x in arr[1:] if x < pivot])",
+     "after": "lesser = quicksort([x for x in arr[1:] if x <= pivot])"
+    },
+    {
+     "line": 7,
+     "class": "strictness",
+     "before": "greater = quicksort([x for x in arr[1:] if x > pivot])",
+     "after": "greater = quicksort([x for x in arr[1:] if x >= pivot])"
+    }
+   ],
+   "outcome": "ambiguous"
+  },
+  "reverse_linked_list": {
+   "program": "reverse_linked_list",
+   "correct_passes": true,
+   "runs": 0,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "rpn_eval": {
+   "program": "rpn_eval",
+   "correct_passes": true,
+   "runs": 18,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_path_length": {
+   "program": "shortest_path_length",
+   "correct_passes": true,
+   "runs": 11,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_path_lengths": {
+   "program": "shortest_path_lengths",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_paths": {
+   "program": "shortest_paths",
+   "correct_passes": true,
+   "runs": 22,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shunting_yard": {
+   "program": "shunting_yard",
+   "correct_passes": true,
+   "runs": 38,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "sieve": {
+   "program": "sieve",
+   "correct_passes": true,
+   "runs": 6,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "sqrt": {
+   "program": "sqrt",
+   "correct_passes": true,
+   "runs": 23,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "subsequences": {
+   "program": "subsequences",
+   "correct_passes": true,
+   "runs": 27,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "to_base": {
+   "program": "to_base",
+   "correct_passes": true,
+   "runs": 23,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "topological_ordering": {
+   "program": "topological_ordering",
+   "correct_passes": true,
+   "runs": 2,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "wrap": {
+   "program": "wrap",
+   "correct_passes": true,
+   "runs": 10,
+   "greens": [],
+   "outcome": "refused"
+  }
+ },
+ "obfuscated": {
+  "bitcount": {
+   "program": "bitcount",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "breadth_first_search": {
+   "program": "breadth_first_search",
+   "correct_passes": true,
+   "runs": 11,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "bucketsort": {
+   "program": "bucketsort",
+   "correct_passes": true,
+   "runs": 3,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "depth_first_search": {
+   "program": "depth_first_search",
+   "correct_passes": true,
+   "runs": 2,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "detect_cycle": {
+   "program": "detect_cycle",
+   "correct_passes": true,
+   "runs": 3,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "find_first_in_sorted": {
+   "program": "find_first_in_sorted",
+   "correct_passes": true,
+   "runs": 14,
+   "greens": [
+    {
+     "line": 10,
+     "class": "strictness",
+     "before": "while _0xcaf9a10c77 <= _0x7da67f0dd4:",
+     "after": "while _0xcaf9a10c77 < _0x7da67f0dd4:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "find_in_sorted": {
+   "program": "find_in_sorted",
+   "correct_passes": true,
+   "runs": 11,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "flatten": {
+   "program": "flatten",
+   "correct_passes": true,
+   "runs": 0,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "gcd": {
+   "program": "gcd",
+   "correct_passes": true,
+   "runs": 1,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "get_factors": {
+   "program": "get_factors",
+   "correct_passes": true,
+   "runs": 9,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "hanoi": {
+   "program": "hanoi",
+   "correct_passes": true,
+   "runs": 19,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "is_valid_parenthesization": {
+   "program": "is_valid_parenthesization",
+   "correct_passes": true,
+   "runs": 10,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "kheapsort": {
+   "program": "kheapsort",
+   "correct_passes": true,
+   "runs": 6,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "knapsack": {
+   "program": "knapsack",
+   "correct_passes": true,
+   "runs": 19,
+   "greens": [
+    {
+     "line": 20,
+     "class": "strictness",
+     "before": "if _0xa4f3db0b73 < _0xb5b62fe9fd:",
+     "after": "if _0xa4f3db0b73 <= _0xb5b62fe9fd:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "kth": {
+   "program": "kth",
+   "correct_passes": true,
+   "runs": 14,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "lcs_length": {
+   "program": "lcs_length",
+   "correct_passes": true,
+   "runs": 8,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "levenshtein": {
+   "program": "levenshtein",
+   "correct_passes": true,
+   "runs": 17,
+   "greens": [
+    {
+     "line": 9,
+     "class": "literal-off-by-one",
+     "before": "return 1 + levenshtein(_0x882e38bd50[1:], _0xc65b291477[1:])",
+     "after": "return 0 + levenshtein(_0x882e38bd50[1:], _0xc65b291477[1:])"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "lis": {
+   "program": "lis",
+   "correct_passes": true,
+   "runs": 16,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "longest_common_subsequence": {
+   "program": "longest_common_subsequence",
+   "correct_passes": true,
+   "runs": 9,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "max_sublist_sum": {
+   "program": "max_sublist_sum",
+   "correct_passes": true,
+   "runs": 4,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "mergesort": {
+   "program": "mergesort",
+   "correct_passes": true,
+   "runs": 21,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "minimum_spanning_tree": {
+   "program": "minimum_spanning_tree",
+   "correct_passes": true,
+   "runs": 0,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "next_palindrome": {
+   "program": "next_palindrome",
+   "correct_passes": true,
+   "runs": 30,
+   "greens": [
+    {
+     "line": 51,
+     "class": "len-as-last-index",
+     "before": "return [1] + len(_0x5053a8148c) * [0] + [1]",
+     "after": "return [1] + (len(_0x5053a8148c) - 1) * [0] + [1]"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "next_permutation": {
+   "program": "next_permutation",
+   "correct_passes": true,
+   "runs": 18,
+   "greens": [
+    {
+     "line": 5,
+     "class": "flipped-comparison-direction",
+     "before": "if _0x42cbf51f5f[_0xb5b62fe9fd] < _0x42cbf51f5f[_0x3bff55042f]:",
+     "after": "if _0x42cbf51f5f[_0xb5b62fe9fd] > _0x42cbf51f5f[_0x3bff55042f]:"
+    }
+   ],
+   "outcome": "repaired"
+  },
+  "pascal": {
+   "program": "pascal",
+   "correct_passes": true,
+   "runs": 20,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "possible_change": {
+   "program": "possible_change",
+   "correct_passes": true,
+   "runs": 9,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "powerset": {
+   "program": "powerset",
+   "correct_passes": true,
+   "runs": 2,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "quicksort": {
+   "program": "quicksort",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [
+    {
+     "line": 14,
+     "class": "strictness",
+     "before": "_0xea98cfa27e = quicksort([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8[1:] if _0x881ada2358 < _0x58f51ae8d2])",
+     "after": "_0xea98cfa27e = quicksort([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8[1:] if _0x881ada2358 <= _0x58f51ae8d2])"
+    },
+    {
+     "line": 18,
+     "class": "strictness",
+     "before": "_0xf8833d98ed = quicksort([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8[1:] if _0x881ada2358 > _0x58f51ae8d2])",
+     "after": "_0xf8833d98ed = quicksort([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8[1:] if _0x881ada2358 >= _0x58f51ae8d2])"
+    }
+   ],
+   "outcome": "ambiguous"
+  },
+  "reverse_linked_list": {
+   "program": "reverse_linked_list",
+   "correct_passes": true,
+   "runs": 0,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "rpn_eval": {
+   "program": "rpn_eval",
+   "correct_passes": true,
+   "runs": 9,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_path_length": {
+   "program": "shortest_path_length",
+   "correct_passes": true,
+   "runs": 8,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_path_lengths": {
+   "program": "shortest_path_lengths",
+   "correct_passes": true,
+   "runs": 3,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shortest_paths": {
+   "program": "shortest_paths",
+   "correct_passes": true,
+   "runs": 5,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "shunting_yard": {
+   "program": "shunting_yard",
+   "correct_passes": true,
+   "runs": 7,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "sieve": {
+   "program": "sieve",
+   "correct_passes": true,
+   "runs": 6,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "sqrt": {
+   "program": "sqrt",
+   "correct_passes": true,
+   "runs": 7,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "subsequences": {
+   "program": "subsequences",
+   "correct_passes": true,
+   "runs": 9,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "to_base": {
+   "program": "to_base",
+   "correct_passes": true,
+   "runs": 7,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "topological_ordering": {
+   "program": "topological_ordering",
+   "correct_passes": true,
+   "runs": 2,
+   "greens": [],
+   "outcome": "refused"
+  },
+  "wrap": {
+   "program": "wrap",
+   "correct_passes": true,
+   "runs": 7,
+   "greens": [],
+   "outcome": "refused"
+  }
+ }
+}

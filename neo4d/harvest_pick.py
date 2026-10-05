@@ -29,8 +29,8 @@ from neo4d import harvest_live as HL
 
 from neo4d import REPO as ROOT, KERNELS, BUILD
 COV = ROOT / "bench" / "pick_click" / "cov.json"
-_so = BUILD / "pick.so"
-subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(_so), str(KERNELS / "pick.c")], check=True)
+from neo4d import build_kernel
+_so = build_kernel("pick")
 _p = ctypes.CDLL(str(_so)).pick
 _p.argtypes, _p.restype = [ctypes.c_int32], ctypes.c_int32
 pick = lambda x: int(_p(x))
@@ -142,8 +142,8 @@ def route4d5_scorer():
     src = KERNELS / "router4d5.c"
     if not src.exists():
         return None
-    so = BUILD / "route4d5.so"
-    subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-fwrapv", "-o", str(so), str(src)], check=True)
+    from neo4d import build_kernel
+    so = build_kernel("router4d5")
     f = ctypes.CDLL(str(so)).route4d5
     f.argtypes, f.restype = [ctypes.c_int64], ctypes.c_int64
 

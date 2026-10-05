@@ -38,8 +38,8 @@ sys.path.insert(0, str(FR / "examples"))
 from fluid_router import route as ring_route          # noqa: E402  the router, verbatim
 from kdebug import WORKED_EXAMPLE, apply_act, observe  # noqa: E402
 
-SO = BUILD / "route4d.so"
-subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-fwrapv", "-o", str(SO), str(KERNELS / "router4d.c")], check=True)
+from neo4d import build_kernel
+SO = build_kernel("router4d")
 _r4 = ctypes.CDLL(str(SO)).route4d
 _r4.argtypes, _r4.restype = [ctypes.c_int32], ctypes.c_int32
 REFUSE = -1

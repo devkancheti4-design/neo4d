@@ -43,8 +43,8 @@ TPY = ROOT / "bench" / "tvenv" / "bin" / "python"
 WORK = ROOT / "bench" / "harvest_click"
 SKIP, TAKE, STOP, RECHECK = 0, 1, 2, 3
 
-_so = BUILD / "harvest.so"
-subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(_so), str(KERNELS / "harvest.c")], check=True)
+from neo4d import build_kernel
+_so = build_kernel("harvest")
 _h = ctypes.CDLL(str(_so)).harvest
 _h.argtypes, _h.restype = [ctypes.c_int32], ctypes.c_int32
 harvest = lambda x: int(_h(x))
