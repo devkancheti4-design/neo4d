@@ -33,6 +33,10 @@ the system learn by itself.
 | `pick` | which mutation to try next | 0 violations; the unique kernel |
 | `induce` | admit / keep / retire / reject a newly mined class | 0 violations; the unique kernel |
 
+Edge cases against the brute-force group (`neo4d edge`, `results/EDGE_CASES.md`): survivor counts match the group
+at every rank (20,160 / 1,344 / 96 / 8 / 1), every contradiction is refused, and 200,000 random scenarios per router
+show 0 disagreements.
+
 Each law's specification is in `prompts/` - bits, principles, the measurement that motivated it - and each judge
 checks the principles by enumeration, including that every single-cell change to the kernel's table breaks one.
 
