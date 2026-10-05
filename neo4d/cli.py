@@ -16,6 +16,7 @@
     neo4d robustness          noise around the query, other encodings, a million calls in one process
     neo4d exact               neo4d by exact math: closed forms over the group, checked against brute force
     neo4d inductive           shard test, sample-efficiency shootout vs MLP/Transformer, active vs passive, OOD
+    neo4d degeneracy          rank-2 redundant examples, one-bit contradictions, validation points k = 5..8
     neo4d prompts             regenerate the swarm-law prompts
 
 Everything that needs benchmark data reads bench/, fetched by scripts/fetch_bench.sh.
@@ -65,14 +66,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest

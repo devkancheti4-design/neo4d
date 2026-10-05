@@ -44,6 +44,9 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | shard: affinity broken by degree eps = 0 ... 1 | neo4d exact at eps = 0, settling at the exact 3/13 / 5/13 / 5/13 by eps = 0.6; the MLP is wrong on 98-99% of unseen codes throughout |
 | active vs passive: examples until pinned | active (new direction only) **5, always** - the minimum possible; passive expected **215/39 = 5.51** (simulated 5.51) |
 | out-of-distribution: five examples in the top-bit-0 subspace, a query with it set | refused **100%**, wrong **0%** |
+| degeneracy (`neo4d degeneracy`): 10 redundant examples spanning only rank 2 | in-plane queries **100% right**, out-of-plane **100% refused**, **0 wrong**; every 5-subset agrees |
+| one-bit contradictions: a repeated case or a dependent case, one action bit flipped | brute force finds no map in all 40,000; router refuses **640,000 / 640,000** queries |
+| validation points against a non-affine truth, k = 5..8 | wrong **5/13 -> 9/286 -> 2/715 -> 7/25,740** exact (simulated 38.41 / 3.11 / 0.27 / 0.026%); zero only at k = 16 |
 
 ## The laws - authored externally, judged here
 
