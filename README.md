@@ -23,6 +23,19 @@ the system learn by itself.
 
 `results/` holds every measurement; `docs/GENERALIZATION.md` is the full account.
 
+## By exact math (`neo4d exact`, `results/EXACT_MATH.md`)
+
+Closed forms over the affine group of GF(2)^4, each checked by brute force or simulation:
+
+| | exact |
+|---|---|
+| maps surviving examples of rank r = 0..4 | 20,160 / 1,344 / 96 / 8 / 1 - prod (16 - 2^i), i = r..3 |
+| examples that pin a whole relabelling | ring **1** (16 maps), neo4d **5** (322,560 maps), structure-free **15** (16! maps) |
+| five random cases pin it | **8/13**; chosen span-aware: **1** |
+| a truth outside the structure (random permutation) | right **3/13**, refused **5/13**, wrong **5/13** - simulated 23.09 / 38.30 / 38.61% |
+| a ghost query (rank-3 span) | any guess right at most **1/8**; neo4d wrong **0** |
+| test runs to learn one relabelling | neo4d **20**, structure-free 60, every kind 64 |
+
 ## The laws - authored externally, judged here
 
 | law | decides | judged |
