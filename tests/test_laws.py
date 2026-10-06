@@ -1,5 +1,8 @@
 """Every authored law, judged by enumeration - the same checks as `neo4d judge --quick`."""
-from neo4d import KERNELS, judge_harvest, judge_induce, judge_pick
+import os
+
+from neo4d import KERNELS, judge_harvest, judge_induce, judge_pick, judge_ship
+from neo4d import judge_router5 as R5
 from neo4d import judge_router4d as R4
 
 
@@ -28,3 +31,12 @@ def test_pick():
 
 def test_induce():
     assert judge_induce.report(judge_induce.load(str(KERNELS / "induce.c")), "induce.c") == 0
+
+
+def test_ship():
+    assert judge_ship.report(judge_ship.load(str(KERNELS / "ship.c")), "ship.c") == 0
+
+
+def test_route5_k6():
+    t = R5.run(R5.build(KERNELS / "router5.c"), 800_000, os.cpu_count() or 8)
+    assert R5.report(t, "router5.c") == 0

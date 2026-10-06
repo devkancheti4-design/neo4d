@@ -18,6 +18,9 @@
     neo4d inductive           shard test, sample-efficiency shootout vs MLP/Transformer, active vs passive, OOD
     neo4d degeneracy          rank-2 redundant examples, one-bit contradictions, validation points k = 5..8
     neo4d induce-live         INDUCE replayed on click's history: the learning curve
+    neo4d kit-scaling | kit-language | kit-outage | kit-federation | kit-proof     the kit's five directions
+    neo4d router5-math        the 32-kind router's numbers, exact               -> results/ROUTER5_MATH.md
+    neo4d router5-live        route5 live at 32 kinds: federation, degeneracy, adversary -> results/ROUTER5_LIVE.md
     neo4d prompts             regenerate the swarm-law prompts
 
 Everything that needs benchmark data reads bench/, fetched by scripts/fetch_bench.sh.
@@ -55,6 +58,11 @@ def judge_all(quick: bool) -> int:
     note("harvest", judge_harvest.main(str(KERNELS / "harvest.c")))
     note("pick", judge_pick.report(judge_pick.load(str(KERNELS / "pick.c")), "pick.c"))
     note("induce", judge_induce.report(judge_induce.load(str(KERNELS / "induce.c")), "induce.c"))
+    from neo4d import judge_ship, judge_router5 as R5
+    note("ship", judge_ship.report(judge_ship.load(str(KERNELS / "ship.c")), "ship.c"))
+    import os
+    t = R5.run(R5.build(KERNELS / "router5.c"), 800_000 if quick else 16_000_000, os.cpu_count() or 8)
+    note("route5    (GL(5,2), 32 kinds, k = 6; the CBMC proof: judge_router5 --prove)", R5.report(t, "router5.c"))
     print("\n  ================= neo4d judge =================")
     for name, n in rows:
         print(f"  {name:70} {'PASS' if n == 0 else f'{n} violations'}")
@@ -67,14 +75,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest

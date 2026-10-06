@@ -24,7 +24,7 @@ can name. Today it uses 11.
 - It needs 6 examples instead of 5, and an input of 65 bits instead of 44, so it reads two words.
 - Random cases pin a map less often: 128/261 for 6 cases, against 8/13 for 16 kinds with 5.
 
-Its prompt is written: `prompts/ROUTER5_LAW_PROMPT.md`, with its judge (`python -m neo4d.judge_router5`), a brute-force selfcheck over all 9,999,360 maps of GL(5,2), and a CBMC proof harness waiting for the law.
+**It is now authored and judged: `route5`** (`neo4d/kernels/router5.c`, prompt `prompts/ROUTER5_LAW_PROMPT.md`). 0 violations on the sampled judge, **proved by CBMC on every word**, 105 instructions with no branches and no memory operations, and live at 32 kinds at the exact values (`results/ROUTER5_JUDGE.md`, `ROUTER5_LIVE.md`, `SILICON.md`). Switching the body to it - a 32-slot net, the XOR with example 1 - is body work, for when the vocabulary passes 16 kinds.
 
 ## What the kit does not show
 
