@@ -57,6 +57,7 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | `harvest` | keep / skip / recheck / stop one mutation trial | 0 violations; the unique kernel its principles allow |
 | `pick` | which mutation to try next | 0 violations; the unique kernel |
 | `induce` | admit / keep / retire / reject a newly mined class | 0 violations; the unique kernel |
+| `ship` | refuse / ask / ship / ship-proven one candidate repair | 0 violations; the unique kernel; every bit earns its place |
 
 Edge cases against the brute-force group (`neo4d edge`, `results/EDGE_CASES.md`): survivor counts match the group
 at every rank (20,160 / 1,344 / 96 / 8 / 1), every contradiction is refused, and 200,000 random scenarios per router
@@ -107,7 +108,9 @@ teacher that discovers exact rules from few examples, a symmetry space that show
 ## What is not shown yet
 
 - Repair is bounded by the vocabulary: fluidfix's nine shipped classes generate 14 of 1,729 real benchmark fixes.
-  Growing that vocabulary is INDUCE's job, and its learning curve is the next measurement.
+- INDUCE's learning curve on click's history (`neo4d induce-live`) is **flat**: one-token patterns rarely recur, so the
+  law admitted 9 classes (most of them prose typos) and covered 1.2% of 426 later one-line fixes; admitting at first
+  sight covers 5.4% but fires a wrong competing proposal on up to 78% of fixes. Growth needs richer pattern classes.
 - The secret renumberings in the live runs were affine - inside the structure by construction.
 - On fluid-router's corpus the numbering decided the winner: 4D wins under a 4D-native numbering, the ring under
   fluidfix's ring numbering.
