@@ -48,6 +48,16 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | one-bit contradictions: a repeated case or a dependent case, one action bit flipped | brute force finds no map in all 40,000; router refuses **640,000 / 640,000** queries |
 | validation points against a non-affine truth, k = 5..8 | wrong **5/13 -> 9/286 -> 2/715 -> 7/25,740** exact (simulated 38.41 / 3.11 / 0.27 / 0.026%); zero only at k = 16 |
 
+## The kit - five directions, tested (`results/KIT.md`)
+
+| direction | result | new law? |
+|---|---|---|
+| beyond affine (`neo4d kit-scaling`) | projective = linear over GF(2) (20,160 = 20,160); 32 kinds need 6 examples and a 65-bit word; cycle rank moves in 2 of 40 fixes | not now - a 32-kind router once the vocabulary passes 16 kinds (it uses 11) |
+| one numbering across languages (`kit-language`) | same kind fixes the same bug in Python and Java in 4 programs; one spelling gap (`len(x)` / `x.length`); 4 of 40 fixes only add a line | no - body work |
+| swarm outage (`kit-outage`) | knowledge is lost far more than cut off; 4D shapes no better than a random graph of the same degree; copies cost classes | no - a copy budget |
+| formal verification (`kit-proof`) | route4d5 on **all 68,719,476,736 reduced words: 0 mismatches** against an independent reference; route4d on all 1,048,576 | no - every kernel now checked on its whole input space |
+| federation (`kit-federation`) | 5 span-aware anchors transfer a whole table between affine numberings, 0 wrong; **not zero-knowledge** | no integer law can supply that |
+
 ## The laws - authored externally, judged here
 
 | law | decides | judged |
@@ -87,6 +97,7 @@ python3 -m venv .venv && .venv/bin/pip install -e .
 scripts/fetch_bench.sh                 # the benchmark data (BugsInPy, Defects4J, Defects4C, QuixBugs, click, ...)
 .venv/bin/neo4d corpus-big             # 4D-native vocabulary on 1,566 real fixes
 .venv/bin/neo4d learn                  # the self-learning loop live on click
+.venv/bin/neo4d kit-proof              # route4d5 on every one of its 2^36 reduced inputs (~10 min)
 ```
 
 ## How the loop learns

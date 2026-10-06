@@ -1,0 +1,170 @@
+"""Kit test 3 - swarm outage: when nodes die, is knowledge LOST or only CUT OFF? And would a relocate law help?
+
+The swarm's own graphs and placement (neo4d/swarm.py): every dictionary on a home node and its antipode. A random
+share of nodes dies; for every live entry node and every dictionary:
+
+    reachable     a live copy sits in the entry's live component - the job can still get there
+    cut off       a live copy exists, but only in another component - no route reaches it
+    lost          every copy is dead
+
+    simultaneous  the nodes die at once. Exact: a mirrored dictionary is lost with chance m(m-1) / (V(V-1)).
+    gradual       the nodes die one at a time; RELOCATE copies a dictionary that lost a copy onto the least-loaded
+                  live node in the surviving copy's component (no law - the simplest body rule, to measure the
+                  ceiling of what a relocate law could buy, and its memory cost: the most dictionaries one node
+                  must then hold).
+
+    python -m neo4d.kit_outage   -> results/KIT_OUTAGE.md
+"""
+from __future__ import annotations
+
+import random
+import sys
+from collections import deque
+from fractions import Fraction as Fr
+
+from neo4d import REPO
+from neo4d import swarm as S
+
+SHARES = (0.25, 0.50, 0.75)
+
+
+def components(adj, dead):
+    comp = [-1] * len(adj)
+    c = 0
+    for s in range(len(adj)):
+        if s in dead or comp[s] >= 0:
+            continue
+        comp[s] = c
+        q = deque([s])
+        while q:
+            u = q.popleft()
+            for w in adj[u]:
+                if w not in dead and comp[w] < 0:
+                    comp[w] = c
+                    q.append(w)
+        c += 1
+    return comp
+
+
+def score(adj, holders, dead):
+    """Shares over (live entry, dictionary) pairs: reachable, cut off, lost."""
+    comp = components(adj, dead)
+    live = [v for v in range(len(adj)) if v not in dead]
+    reach = cut = lost = 0
+    for h in holders:
+        lh = [v for v in h if v not in dead]
+        if not lh:
+            lost += len(live)
+            continue
+        where = {comp[v] for v in lh}
+        r = sum(comp[e] in where for e in live)
+        reach += r
+        cut += len(live) - r
+    n = len(live) * len(holders)
+    return reach / n, cut / n, lost / n
+
+
+def gradual(adj, holders, order, stop, relocate, cap=None):
+    holders = [list(h) for h in holders]
+    load = [0] * len(adj)
+    for h in holders:
+        for v in h:
+            load[v] += 1
+    dead = set()
+    for v in order[:stop]:
+        dead.add(v)
+        if not relocate:
+            continue
+        comp = components(adj, dead)
+        for h in holders:
+            if v not in h:
+                continue
+            h.remove(v)
+            if not h:
+                continue
+            c = comp[h[0]]
+            spare = [w for w in range(len(adj)) if w not in dead and comp[w] == c and w not in h
+                     and (cap is None or load[w] < cap)]
+            if spare:
+                w = min(spare, key=lambda w: (load[w], w))
+                h.append(w)
+                load[w] += 1
+    return score(adj, holders, dead), max(load[v] for v in range(len(adj)) if v not in dead)
+
+
+def main() -> int:
+    rng = random.Random(2026)
+    graphs = [S.polytope("8-cell"), S.polytope("24-cell"), S.polytope("600-cell"),
+              S.random_regular(120, 12, 7), S.polytope("120-cell")]
+    sim_rows, grad_rows, bad = [], [], 0
+    for g in graphs:
+        partner = g.partner if g.partner is not None else S._farthest_pairs(g.dist)
+        pl = S.place(g, [], partner)
+        holders = pl.holders
+        trials = 2000 if g.V <= 120 else 300
+        for p in SHARES:
+            m = round(p * g.V)
+            acc = [0.0, 0.0, 0.0]
+            for _ in range(trials):
+                dead = set(rng.sample(range(g.V), m))
+                for i, x in enumerate(score(g.adj, holders, dead)):
+                    acc[i] += x / trials
+            exact = Fr(m * (m - 1), g.V * (g.V - 1))
+            sd = (float(exact) * (1 - float(exact)) / (trials * len(holders))) ** 0.5 + 1e-9
+            bad += abs(acc[2] - float(exact)) > 6 * sd
+            sim_rows.append((g.name, g.V, len(g.adj[0]), p, acc, exact))
+            gt = 200 if g.V <= 120 else 20
+            gr = [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]
+            peak = [0, 0, 0]
+            for _ in range(gt):
+                order = list(range(g.V))
+                rng.shuffle(order)
+                for j, (rel, cap) in enumerate(((False, None), (True, 2), (True, None))):
+                    sc, mx = gradual(g.adj, holders, order, m, rel, cap)
+                    for i in range(3):
+                        gr[j][i] += sc[i] / gt
+                    peak[j] = max(peak[j], mx)
+            grad_rows.append((g.name, p, gr, peak))
+        print(f"  {g.name} done", flush=True)
+    out = ["# Kit 3 - swarm outage: lost knowledge or cut-off knowledge?", "",
+           "Generated by `neo4d/kit_outage.py`. The swarm's own graphs; every dictionary on a node and its antipode "
+           "(the farthest node, for the random control). Shares are over every (live entry node, dictionary) pair.", "",
+           "## Simultaneous outage", "",
+           "| graph | nodes | links each | dead | reachable | cut off | **lost** | lost, exact m(m-1)/V(V-1) |",
+           "|---|---|---|---|---|---|---|---|"]
+    for name, V, deg, p, acc, exact in sim_rows:
+        out.append(f"| {name} | {V} | {deg} | {p:.0%} | {acc[0]:.1%} | {acc[1]:.1%} | **{acc[2]:.1%}** | "
+                   f"{float(exact):.1%} |")
+    out += ["", "## Gradual outage - with and without relocation", "",
+            "The same nodes die one at a time. RELOCATE: after each death, a dictionary that lost a copy gets a new one "
+            "on the least-loaded live node in its surviving copy's component. The placement fills every node with one "
+            "dictionary (7 taught slots), so a node has no room for a second: relocation needs slack. **Cap 2**: every "
+            "node keeps room for two dictionaries - half-size dictionaries, so the swarm stores half the classes. "
+            "**Uncapped**: the ceiling, and the peak load it needs.", "",
+            "| graph | dead | no relocation: reachable / cut off / **lost** | relocate, cap 2 | relocate, uncapped | peak load uncapped |",
+            "|---|---|---|---|---|---|"]
+    for name, p, gr, peak in grad_rows:
+        cells = [f"{a[0]:.1%} / {a[1]:.1%} / **{a[2]:.1%}**" for a in gr]
+        out.append(f"| {name} | {p:.0%} | " + " | ".join(cells) + f" | {peak[2]} |")
+    out += ["", "## What the copies cost - classes kept, against the chance a given class survives", "",
+            "Every scheme fills the same taught slots S (7 per node). One copy per class stores S classes; the mirror "
+            "stores S/2; mirror + relocation at cap 2 stores S/4. Gradual outage; kept = expected distinct classes "
+            "still alive, as a share of S; survives = the chance one given class is still alive.", "",
+            "| graph | dead | one copy: kept / survives | mirror (as built) | mirror + relocate, cap 2 |",
+            "|---|---|---|---|---|"]
+    for (name, V, deg, p, acc, exact), (_, _, gr, _) in zip(sim_rows, grad_rows):
+        m = round(p * V)
+        one, mir, cap2 = 1 - m / V, 1 - float(exact), 1 - gr[1][2]
+        out.append(f"| {name} | {p:.0%} | **{one:.2f}** S / {one:.0%} | {mir / 2:.2f} S / {mir:.0%} | "
+                   f"{cap2 / 4:.2f} S / **{cap2:.0%}** |")
+    out += ["", "One copy always keeps the most classes: (1 - p) S against (1 - p^2) S/2 for the mirror, larger for "
+            "every p < 1. The mirror and relocation buy the guarantee for a given class, paid for in classes stored. "
+            "Which to buy is a budget - a parameter of the body - not a decision made per event."]
+    out += ["", f"**Checks failed: {bad}** (simulated loss against the exact formula, 6 standard deviations)."]
+    (REPO / "results" / "KIT_OUTAGE.md").write_text("\n".join(out) + "\n")
+    print("\n".join(out))
+    return int(bad != 0)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
