@@ -126,6 +126,7 @@ teacher that discovers exact rules from few examples, a symmetry space that show
   recur. The RELATE law (`neo4d relate-live`) answers it with richer patterns - relations and literal edits as neurons -
   and reaches 17.4% on click and 10.3% across 49 projects; the price is 50-75 candidates per fix line, each a suite run.
 - A noisy teacher breaks RELATE's precision: with 10% wrong lessons it falls from 82% to 2% on the mutation domain, because R9 spares cheap relations from weakening. Dropping that one exemption restores 58% (`results/DOMAIN_HARD.md`) - the RELATE v2 law, authored and judged (`results/RELATE_V2.md`). Taught on Python, the mutation domain carries to C at 93% coverage and 85% precision, to C++ and Java at 88-90% coverage but 26-46% precision.
+- Topology (`neo4d kit-topology`): in a closed domain the swarm absorbs the domain's rewrite graph exactly - all 70 edges, 7 components, Betti number 19, no junk edge - by 10,000 taught lines; on real bugs the learned graph is still growing at 706 fixes (1.6x from mid-stream to the end), though every order of the bugs reaches the same graph (99% overlap).
 - The secret renumberings in the live runs were affine - inside the structure by construction.
 - On fluid-router's corpus the numbering decided the winner: 4D wins under a 4D-native numbering, the ring under
   fluidfix's ring numbering.
