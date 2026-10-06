@@ -25,6 +25,7 @@
     neo4d relate-live         a swarm learning relations like neurons [--spec | law.c] -> results/RELATE_LIVE.md
     neo4d domain-mutation     a whole domain taught: code mutation on the standard library -> results/DOMAIN_MUTATION.md
     neo4d domain-hard         harder data: new codebases, C / C++ / Java, harder operators, a noisy teacher -> results/DOMAIN_HARD.md
+    neo4d relate-v2           the RELATE v2 law judged and run live, beside v1 -> results/RELATE_V2.md
     neo4d novelty             does novelty die? new-pattern rate on bugs, click and the mutation domain -> results/NOVELTY.md
     neo4d prompts             regenerate the swarm-law prompts
 
@@ -70,6 +71,7 @@ def judge_all(quick: bool) -> int:
     note("route5    (GL(5,2), 32 kinds, k = 6; the CBMC proof: judge_router5 --prove)", R5.report(t, "router5.c"))
     from neo4d import judge_relate
     note("relate v1", judge_relate.report(judge_relate.load(str(KERNELS / "relate_v1.c")), "relate_v1.c"))
+    note("relate v2", judge_relate.report(judge_relate.load(str(KERNELS / "relate_v2.c"), "relate_v2"), "relate_v2.c", 2))
     print("\n  ================= neo4d judge =================")
     for name, n in rows:
         print(f"  {name:70} {'PASS' if n == 0 else f'{n} violations'}")
@@ -82,14 +84,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty", "relate-v2"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard", "relate-v2": "relate_v2_check"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest

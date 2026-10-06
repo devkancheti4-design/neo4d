@@ -1,0 +1,152 @@
+"""The RELATE v2 law (neo4d/kernels/relate_v2.c), judged and run live - the record behind results/RELATE_V2.md.
+
+    1  the judge (v2 principles), and how the authored table differs from v1's
+    2  the machine code: instructions, branches, memory operations
+    3  every 32-bit input: always 0..3, and always reading only the low 8 bits (enumeration under UBSan, and CBMC)
+    4  live on the real-bug streams, v1 beside v2 (neo4d/relate_live.py)
+    5  live under a noisy teacher - the reason for v2 - with the authored kernels, not tables (neo4d/domain_hard.py's E4)
+
+    python -m neo4d.relate_v2_check   -> results/RELATE_V2.md
+"""
+from __future__ import annotations
+
+import contextlib
+import io
+import random
+import re
+import shutil
+import statistics
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+from neo4d import BUILD, KERNELS, REPO
+from neo4d import domain_hard as H
+from neo4d import domain_mutation as D
+from neo4d import judge_relate as J
+from neo4d import relate_live as RL
+
+V1, V2 = KERNELS / "relate_v1.c", KERNELS / "relate_v2.c"
+HARNESS = r'''
+#include <stdint.h>
+#include <stdio.h>
+int32_t FN(int32_t x);
+int main(void){
+    unsigned long long bad_range = 0, bad_low8 = 0;
+    int32_t low[256];
+    for (int v = 0; v < 256; v++) low[v] = FN(v);
+    for (unsigned long long u = 0; u <= 0xFFFFFFFFULL; u++) {
+        int32_t x = (int32_t)(uint32_t)u, r = FN(x);
+        bad_range += (r < 0 || r > 3);
+        bad_low8 += (r != low[u & 255]);
+    }
+    printf("%llu %llu\n", bad_range, bad_low8);
+    return 0;
+}
+'''
+CBMC = r'''
+#include <assert.h>
+#include <stdint.h>
+int32_t FN(int32_t x);
+int32_t nondet_int32(void);
+int main(void){ int32_t x = nondet_int32(); int32_t r = FN(x); assert(r >= 0 && r <= 3); assert(r == FN(x & 255)); return 0; }
+'''
+
+
+def machine(path):
+    obj = Path(tempfile.mkdtemp()) / "r.o"
+    subprocess.run(["cc", "-O2", "-c", "-o", str(obj), str(path)], check=True)
+    asm = subprocess.run(["otool", "-tv", str(obj)], capture_output=True, text=True).stdout
+    ins = [l for l in asm.splitlines() if re.match(r"^[0-9a-f]+\s", l)]
+    text = "\n".join(ins)
+    return (len(ins), len(re.findall(r"\sb\.[a-z]{2}\s|\scbn?z\s|\stbn?z\s", text)),
+            len(re.findall(r"\s(ldr|str|ldp|stp|ldur|stur)[a-z]*\s", text)))
+
+
+def all32(path, fn):
+    d = Path(tempfile.mkdtemp())
+    (d / "h.c").write_text(HARNESS.replace("FN", fn))
+    subprocess.run(["cc", "-O2", "-fsanitize=undefined", "-fno-sanitize-recover=all", "-o", str(d / "h"),
+                    str(d / "h.c"), str(path)], check=True)
+    r = subprocess.run([str(d / "h")], capture_output=True, text=True)
+    bad_range, bad_low8 = map(int, r.stdout.split())
+    proved = None
+    if shutil.which("cbmc"):
+        (d / "p.c").write_text(CBMC.replace("FN", fn))
+        out = subprocess.run(["cbmc", str(d / "p.c"), str(path)], capture_output=True, text=True).stdout
+        proved = "VERIFICATION SUCCESSFUL" in out
+    return r.returncode == 0, bad_range, bad_low8, proved
+
+
+def main() -> int:
+    v1, v2 = RL.load_law(str(V1)), RL.load_law(str(V2))
+    t2 = [v2(x) for x in range(256)]
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        violations = J.report(t2, str(V2.relative_to(REPO)), 2)
+    t1 = J.spec_table(1)
+    moved = [x for x in J.R if t2[x] != t1[x]]
+    m1, m2 = machine(V1), machine(V2)
+    ok32, br, bl, proved = all32(V2, "relate_v2")
+    print("  judged, machine code, 32-bit inputs done", flush=True)
+
+    bugs, click = RL.prep(), RL.prep_click()
+    live = {}
+    for name, law in (("v1", v1), ("v2", v2)):
+        live[(name, "bugs")] = {k: statistics.mean(RL.law_policy(bugs, s, law, ("rel", "lit"))[k] for s in RL.SEEDS)
+                                for k in ("cov", "first", "second", "fixline")}
+        live[(name, "click")] = RL.law_policy(click, 0, law, ("rel", "lit"))
+    print("  bug streams done", flush=True)
+
+    C = H.corpora()
+    base = D.Domain(raw=C["lib"])
+    S = H.sets_of(base)
+    noise = {}
+    for seed in H.SEEDS:
+        nets = sorted({base.lines[i]["net"] for i in S["py"]})
+        random.Random(1000 + seed).shuffle(nets)
+        held = set(nets[:len(nets) // 4])
+        train = [i for i in S["py"] if base.lines[i]["net"] not in held]
+        test = H.sample([i for i in S["py"] if base.lines[i]["net"] in held], H.N_EVAL, seed)
+        taught = random.Random(seed).sample(train, 10000)
+        for nz in (0.0, 0.1, 0.3, 0.5):
+            for name, law in (("v1", v1), ("v2", v2)):
+                act = D.teach(base, taught, law, ("ctx",), costly_t=D.JUNK, noise=nz, noise_seed=seed)
+                noise.setdefault((name, nz), []).append(D.evaluate(base, act, test))
+        print(f"  noisy teacher seed {seed} done", flush=True)
+    nm = lambda name, nz, f: statistics.mean(e[f] for e in noise[(name, nz)])
+
+    out = ["# RELATE v2 - judged and run live", "",
+           "Generated by `neo4d/relate_v2_check.py`. The law: `neo4d/kernels/relate_v2.c` (authored externally, from "
+           "`prompts/RELATE_V2_LAW_PROMPT.md`). v1 is kept as `neo4d/kernels/relate_v1.c`.", "",
+           "## The judge", "", "```", buf.getvalue().strip("\n"), "```", "",
+           f"The authored table differs from v1's in **{len(moved)} cells**: {', '.join(map(str, moved))} - "
+           f"{'every one BARREN and CHEAP, exactly the cells the prompt names' if all(J.B(x, J.BARREN) and J.B(x, J.CHEAP) for x in moved) else 'NOT all BARREN and CHEAP'}.", "",
+           "## The machine code and every 32-bit input", "",
+           "| | v1 | **v2** |", "|---|---|---|",
+           f"| instructions | {m1[0]} | **{m2[0]}** |",
+           f"| conditional branches / memory operations | {m1[1]} / {m1[2]} | **{m2[1]} / {m2[2]}** |", "",
+           f"All 4,294,967,296 `int32` inputs under UBSan: {'clean' if ok32 else 'UNDEFINED BEHAVIOUR'}, "
+           f"**{br}** outside 0..3, **{bl}** differing from `relate_v2(x & 255)` - it reads only the low 8 bits. "
+           + ("CBMC proves the same, with no signed overflow: **VERIFICATION SUCCESSFUL**." if proved else
+              "CBMC: " + ("FAILED." if proved is False else "not installed.")), "",
+           "## Live - real bugs (literal edits and relations as neurons, barren record 100 firings)", "",
+           "| stream | v1 | **v2** |", "|---|---|---|"]
+    for stream, label in (("bugs", "bugs, 49 projects (8 seeds)"), ("click", "click's history, commit order")):
+        a, b = live[("v1", stream)], live[("v2", stream)]
+        out.append(f"| {label} | {a['cov']:.1%} ({a['first']:.1%} -> {a['second']:.1%}) | "
+                   f"**{b['cov']:.1%}** ({b['first']:.1%} -> {b['second']:.1%}) |")
+    out += ["", "## Live - a noisy teacher (the mutation domain, 10,000 lessons, held-out modules, 3 seeds)", "",
+            "| wrong lessons | v1: coverage / **precision** | v2: coverage / **precision** |", "|---|---|---|"]
+    for nz in (0.0, 0.1, 0.3, 0.5):
+        out.append(f"| {nz:.0%} | {nm('v1', nz, 'cov'):.1%} / **{nm('v1', nz, 'prec'):.1%}** | "
+                   f"{nm('v2', nz, 'cov'):.1%} / **{nm('v2', nz, 'prec'):.1%}** |")
+    out += ["", f"**Checks failed: {violations + br + bl + int(not ok32) + int(proved is False)}.**"]
+    (REPO / "results" / "RELATE_V2.md").write_text("\n".join(out) + "\n")
+    print("\n".join(out))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

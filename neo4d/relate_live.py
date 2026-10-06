@@ -202,7 +202,8 @@ def law_policy(d, seed, law, kinds=("rel",)):
 def load_law(path):
     out = Path(tempfile.mkdtemp(prefix="relate_")) / "r.so"
     subprocess.run(["cc", "-O2", "-shared", "-fPIC", "-o", str(out), str(path)], check=True)
-    f = ctypes.CDLL(str(out)).relate
+    lib = ctypes.CDLL(str(out))
+    f = getattr(lib, "relate_v2", None) or lib.relate     # v2's entry point, or v1's
     f.argtypes, f.restype = [ctypes.c_int32], ctypes.c_int32
     table = [int(f(x)) for x in range(256)]
     return lambda x: table[x]
@@ -254,7 +255,7 @@ def prep_click():
     return data
 
 
-def table(d, seeds, law, label_law, spec=None):
+def table(d, seeds, laws, spec=None):
     avg = lambda f: {k: statistics.mean(f(s)[k] for s in seeds) for k in ("cov", "first", "second", "fixline",
                                                                            "unchanged", "active")}
     rows = [("fluidfix's 9 shipped classes", avg(lambda s: shipped_policy(d, s))),
@@ -265,7 +266,7 @@ def table(d, seeds, law, label_law, spec=None):
     if spec is not None:
         rows.append(("the table the principles allow, over relations (`--spec`/`--spec2`: a check, not a law)",
                      avg(lambda s: law_policy(d, s, lambda x: spec[x]))))
-    if law is not None:
+    for label_law, law in laws:
         rows += [(f"{label_law} over relations", avg(lambda s: law_policy(d, s, law, ("rel",)))),
                  (f"{label_law} over literal edits", avg(lambda s: law_policy(d, s, law, ("lit",)))),
                  (f"**{label_law} over both - memory and generalisation**",
@@ -285,11 +286,9 @@ def main() -> int:
     if "--spec" in args or "--spec2" in args:
         from neo4d.judge_relate import spec_table
         spec = spec_table(2 if "--spec2" in args else 1)
-    law_path = next((a for a in args if a.endswith(".c")), None)
-    if law_path is None and (Path(__file__).parent / "kernels" / "relate_v1.c").exists():
-        law_path = str(Path(__file__).parent / "kernels" / "relate_v1.c")
-    law = load_law(law_path) if law_path else None
-    label = f"the RELATE law (`{Path(law_path).name}`)" if law_path else ""
+    paths = [a for a in args if a.endswith(".c")] or \
+        [str(p) for p in (Path(__file__).parent / "kernels" / f"relate_v{v}.c" for v in (1, 2)) if p.exists()]
+    laws = [(f"the RELATE law (`{Path(p).name}`)", load_law(p)) for p in paths]
     d, c = prep(), prep_click()
     _, cheap, costly = tiers(d)
     out = ["# RELATE live - a swarm learning relations like neurons", "",
@@ -303,13 +302,13 @@ def main() -> int:
            f"line). Each project is a net; the neurons are shared. Bugs arrive in a seeded random order, "
            f"{len(SEEDS)} seeds averaged. {len(d['rels'])} relations can generate: {sum(cheap.values())} cheap, "
            f"{sum(costly.values())} costly.", ""]
-    out += table(d, SEEDS, law, label, spec)
+    out += table(d, SEEDS, laws, spec)
     out += ["", "## click's own history - one net, real commit order, fully prospective", "",
             f"**{len(c['rows'])} small fixes in {c['nbugs']['click']} fix commits** (the commits INDUCE was replayed "
             "on, `results/INDUCE_LIVE.md`: literal one-token learning reached 1.2% there).", ""]
-    out += table(c, [0], law, label)
+    out += table(c, [0], laws)
     lit = table.rows["literal edits, at first sight (memorisation, no law)"]
-    both = next((v for k, v in table.rows.items() if "over both" in k), None)
+    both = next((v for k, v in reversed(list(table.rows.items())) if "over both" in k), None)
     out += ["", "**What this shows.** Across projects, relations generalise where literal edits do not transfer; "
             "inside one project's history, its own literal edits recur and memorising them wins. The same law over "
             "both - memory and generalisation, like episodic and semantic memory - beats the law over either alone "
