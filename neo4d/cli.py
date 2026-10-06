@@ -24,6 +24,7 @@
     neo4d relations           fix relations on real bugs: the generalisation ceiling  -> results/RELATIONS.md
     neo4d relate-live         a swarm learning relations like neurons [--spec | law.c] -> results/RELATE_LIVE.md
     neo4d domain-mutation     a whole domain taught: code mutation on the standard library -> results/DOMAIN_MUTATION.md
+    neo4d novelty             does novelty die? new-pattern rate on bugs, click and the mutation domain -> results/NOVELTY.md
     neo4d prompts             regenerate the swarm-law prompts
 
 Everything that needs benchmark data reads bench/, fetched by scripts/fetch_bench.sh.
@@ -80,14 +81,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "novelty"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest
