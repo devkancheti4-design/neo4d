@@ -47,4 +47,8 @@ def test_relate_spec_is_complete():
 
 
 def test_relate():
-    assert judge_relate.report(judge_relate.load(str(KERNELS / "relate.c")), "relate.c") == 0
+    assert judge_relate.report(judge_relate.load(str(KERNELS / "relate_v1.c")), "relate_v1.c") == 0
+
+
+def test_relate_v2_spec_is_complete():
+    assert judge_relate.selfcheck(2) == 0

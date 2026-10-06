@@ -1,5 +1,5 @@
 """A whole domain, taught: code mutation. Does the swarm generalise to code it never saw, cover most of the domain,
-and grow with scale? The RELATE law (neo4d/kernels/relate.c) decides every neuron, unchanged from the bug runs.
+and grow with scale? The RELATE law (neo4d/kernels/relate_v1.c) decides every neuron, unchanged from the bug runs.
 
 THE DOMAIN. The standard mutation operators of mutation-testing tools (mutmut, PIT, Major), applied to every code line
 of the Python standard library on this machine (each top-level module or package is a net):
@@ -430,7 +430,7 @@ JUNK = (30, 2.0)          # the domain's own cost budget: a neuron spraying more
 
 def main() -> int:
     dom = Domain()
-    law = RL.load_law(str(Path(RL.__file__).parent / "kernels" / "relate.c"))
+    law = RL.load_law(str(Path(RL.__file__).parent / "kernels" / "relate_v1.c"))
     n_mut = sum(len(x["refs"]) for x in dom.lines)
     print(f"  {len(dom.lines):,} code lines in {len(dom.nets)} nets; {n_mut:,} mutants", flush=True)
     policies = [("literal edits, first sight (memorisation, no law)", None, ("lit",), None),
@@ -466,7 +466,7 @@ def main() -> int:
            f"{n_mut:,} mutants**. A reference mutator is the teacher and the ground truth.", "",
            f"**The experiment**: a quarter of the modules are held out. The swarm is taught k lines from the rest, "
            "each with all its mutants; every mutant is an event for its neurons, and the RELATE law "
-           "(`neo4d/kernels/relate.c`, unchanged from the bug runs) sets every neuron's strength. Measured on "
+           "(`neo4d/kernels/relate_v1.c`, unchanged from the bug runs) sets every neuron's strength. Measured on "
            f"{N_EVAL:,} lines of the **held-out modules it never saw**, {len(SEEDS)} different splits averaged:", "",
            "- **coverage**: the share of their real mutants the active neurons generate exactly - did it learn the "
            "domain?",

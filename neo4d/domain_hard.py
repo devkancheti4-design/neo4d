@@ -30,28 +30,10 @@ SEEDS = (0, 1, 2)
 
 
 def _v3():
-    """The table R1-R9 allow with one change - R9 without "unless cheap": a check of that principle, never a law."""
+    """RELATE v2's table (prompts/RELATE_V2_LAW_PROMPT.md: R9 without "unless cheap") - the judge's, built only to
+    measure the change, never a law."""
     from neo4d import judge_relate as J
-    t = [0] * 256
-    for x in range(256):
-        L = J.LV(x)
-        if J.B(x, J.COSTLY):
-            t[x] = 1 if J.B(x, J.FIRE) or L >= 1 else 0
-            continue
-        g = [L]
-        if J.B(x, J.FIRE):
-            g.append(1)
-            if J.B(x, J.CHEAP):
-                g.append(2)
-            if J.B(x, J.NEWNET) and L >= 1:
-                g.append(2)
-        if J.B(x, J.PREDICTED) and L >= 1:
-            g.append(min(L + 1, 3))
-        new = max(g)
-        if J.B(x, J.BARREN) and not J.B(x, J.PREDICTED) and new == 2:
-            new = 1
-        t[x] = new
-    return t
+    return J.spec_table(2)
 
 
 V3 = _v3()
@@ -161,7 +143,7 @@ def sample(idx, n, seed):
 
 
 def main() -> int:
-    law = RL.load_law(str(Path(RL.__file__).parent / "kernels" / "relate.c"))
+    law = RL.load_law(str(Path(RL.__file__).parent / "kernels" / "relate_v1.c"))
     C = corpora()
     print("  " + ", ".join(f"{k} {len(v):,}" for k, v in C.items()), flush=True)
     base = D.Domain(raw=C["lib"] + C["tests"] + C["click"] + C["c"] + C["cpp"] + C["java"])

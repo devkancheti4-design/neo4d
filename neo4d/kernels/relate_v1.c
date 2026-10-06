@@ -1,5 +1,6 @@
 /* ===========================================================================
-   THE RELATE LAW -- one relation is one neuron; this sets its new strength.
+   THE RELATE LAW, v1 -- one relation is one neuron; this sets its new strength.
+   (prompts/RELATE_LAW_PROMPT.md; superseded by v2 only if v2 is authored and judged - kept as authored)
    (authored externally; saved verbatim from the conversation - the full
     header with the lane derivation is in the author's original)
 
@@ -10,7 +11,7 @@
    One lane per principle, each reading only the bits that principle names;
    R8 ("exactly the highest of the current one and what R3-R6 grant") is MAX.
 
-   BUILD  cc -O2 -Wall -Wextra -Werror -std=c99 -c relate.c
+   BUILD  cc -O2 -Wall -Wextra -Werror -std=c99 -c relate_v1.c
    =========================================================================== */
 #include <stdint.h>
 

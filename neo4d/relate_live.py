@@ -21,7 +21,7 @@ everywhere. The body measures each event into one byte (prompts/RELATE_LAW_PROMP
     BARREN      while active it fired on 100+ fix lines and generated fewer than 5% of them
 
 Policies compared: fluidfix's 9 shipped classes; every relation at first sight (no law); cheap relations at first
-sight; relations seen in two nets; the law (`--law neo4d/kernels/relate.c`); and, before a law exists, the one table
+sight; relations seen in two nets; the law (`--law neo4d/kernels/relate_v1.c`); and, before a law exists, the one table
 the principles allow (`--spec`, judge_relate.spec_table - built to check the principles, never a law).
 
     python -m neo4d.relate_live [--law path | --spec]   -> results/RELATE_LIVE.md
@@ -263,7 +263,7 @@ def table(d, seeds, law, label_law, spec=None):
             ("every relation, at first sight (no law)", avg(lambda s: first_sight(d, s))),
             ("cheap relations, at first sight", avg(lambda s: first_sight(d, s, only_cheap=True)))]
     if spec is not None:
-        rows.append(("the table the principles allow, over relations (`--spec`: a check, not a law)",
+        rows.append(("the table the principles allow, over relations (`--spec`/`--spec2`: a check, not a law)",
                      avg(lambda s: law_policy(d, s, lambda x: spec[x]))))
     if law is not None:
         rows += [(f"{label_law} over relations", avg(lambda s: law_policy(d, s, law, ("rel",)))),
@@ -282,12 +282,12 @@ def table(d, seeds, law, label_law, spec=None):
 def main() -> int:
     args = sys.argv[1:]
     spec = None
-    if "--spec" in args:
+    if "--spec" in args or "--spec2" in args:
         from neo4d.judge_relate import spec_table
-        spec = spec_table()
+        spec = spec_table(2 if "--spec2" in args else 1)
     law_path = next((a for a in args if a.endswith(".c")), None)
-    if law_path is None and (Path(__file__).parent / "kernels" / "relate.c").exists():
-        law_path = str(Path(__file__).parent / "kernels" / "relate.c")
+    if law_path is None and (Path(__file__).parent / "kernels" / "relate_v1.c").exists():
+        law_path = str(Path(__file__).parent / "kernels" / "relate_v1.c")
     law = load_law(law_path) if law_path else None
     label = f"the RELATE law (`{Path(law_path).name}`)" if law_path else ""
     d, c = prep(), prep_click()
