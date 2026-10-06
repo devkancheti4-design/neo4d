@@ -52,10 +52,10 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 
 | direction | result | new law? |
 |---|---|---|
-| beyond affine (`neo4d kit-scaling`) | projective = linear over GF(2) (20,160 = 20,160); 32 kinds need 6 examples and a 65-bit word; cycle rank moves in 2 of 40 fixes | not now - a 32-kind router once the vocabulary passes 16 kinds (it uses 11) |
+| beyond affine (`neo4d kit-scaling`) | projective = linear over GF(2) (20,160 = 20,160); 32 kinds need 6 examples and a 65-bit word; cycle rank moves in 2 of 40 fixes | a 32-kind router once the vocabulary passes 16 kinds - **prompt ready** (`prompts/ROUTER5_LAW_PROMPT.md`) |
 | one numbering across languages (`kit-language`) | same kind fixes the same bug in Python and Java in 4 programs; one spelling gap (`len(x)` / `x.length`); 4 of 40 fixes only add a line | no - body work |
 | swarm outage (`kit-outage`) | knowledge is lost far more than cut off; 4D shapes no better than a random graph of the same degree; copies cost classes | no - a copy budget |
-| formal verification (`kit-proof`) | route4d5 on **all 68,719,476,736 reduced words: 0 mismatches** against an independent reference; route4d on all 1,048,576 | no - every kernel now checked on its whole input space |
+| formal verification (`kit-proof`) | route4d5 on **all 68,719,476,736 reduced words: 0 mismatches** against an independent reference, and **proved by CBMC on all 2^64 words**; route4d on all 1,048,576 | no - every kernel now checked on its whole input space |
 | federation (`kit-federation`) | 5 span-aware anchors transfer a whole table between affine numberings, 0 wrong; **not zero-knowledge** | no integer law can supply that |
 
 ## The laws - authored externally, judged here
@@ -63,7 +63,8 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | law | decides | judged |
 |---|---|---|
 | `route4d` | the relabelling from 3 worked examples, affine GF(2)^4 | 0 violations; every word of its difference space (1,048,576) |
-| `route4d5` | the relabelling from 5 worked examples, 64-bit | 0 violations; 200,000 words + 50,000/50,000 harvest-shaped answered |
+| `route4d5` | the relabelling from 5 worked examples, 64-bit | 0 violations; all 68,719,476,736 reduced words exhaustively; **CBMC proof on all 2^64 words** |
+| `route5` | the relabelling for 32 kinds from 6 worked examples | **prompt ready** (`prompts/ROUTER5_LAW_PROMPT.md`); its judge (`python -m neo4d.judge_router5`) samples 12M stratified words and proves every word with CBMC; selfcheck: both oracles = brute force over GL(5,2), six wrong routers caught |
 | `harvest` | keep / skip / recheck / stop one mutation trial | 0 violations; the unique kernel its principles allow |
 | `pick` | which mutation to try next | 0 violations; the unique kernel |
 | `induce` | admit / keep / retire / reject a newly mined class | 0 violations; the unique kernel |
