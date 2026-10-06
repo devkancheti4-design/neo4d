@@ -65,6 +65,8 @@ def judge_all(quick: bool) -> int:
     import os
     t = R5.run(R5.build(KERNELS / "router5.c"), 800_000 if quick else 16_000_000, os.cpu_count() or 8)
     note("route5    (GL(5,2), 32 kinds, k = 6; the CBMC proof: judge_router5 --prove)", R5.report(t, "router5.c"))
+    from neo4d import judge_relate
+    note("relate", judge_relate.report(judge_relate.load(str(KERNELS / "relate.c")), "relate.c"))
     print("\n  ================= neo4d judge =================")
     for name, n in rows:
         print(f"  {name:70} {'PASS' if n == 0 else f'{n} violations'}")

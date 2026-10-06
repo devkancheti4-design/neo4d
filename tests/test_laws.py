@@ -44,3 +44,7 @@ def test_route5_k6():
 
 def test_relate_spec_is_complete():
     assert judge_relate.selfcheck() == 0
+
+
+def test_relate():
+    assert judge_relate.report(judge_relate.load(str(KERNELS / "relate.c")), "relate.c") == 0
