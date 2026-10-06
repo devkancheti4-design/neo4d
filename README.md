@@ -65,7 +65,7 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | `route4d` | the relabelling from 3 worked examples, affine GF(2)^4 | 0 violations; every word of its difference space (1,048,576) |
 | `route4d5` | the relabelling from 5 worked examples, 64-bit | 0 violations; all 68,719,476,736 reduced words exhaustively; **CBMC proof on all 2^64 words** |
 | `route5` | the relabelling for **32 kinds** from 6 worked examples, GL(5,2) | 0 violations on 12M stratified words, 2M renumberings, 64M end-to-end queries (UBSan); **CBMC proof on every word** (8 min, 12 cores); live at 32 kinds: federation at the exact values, 0 wrong in class, every one-bit contradiction refused |
-| `relate` | one relation is one neuron: its new strength (unknown / primed / active / proven) on every fix event | 0 violations; the unique table R1-R9 allow, every cell fixed; 54 instructions, 0 branches, 0 memory ops. **Live: real-fix coverage 3.4% -> 9.2% across 49 projects (rising to 12.4%), 0.4% -> 14.5% on click's history (INDUCE: 1.2%)** - `results/RELATE_LIVE.md` |
+| `relate` | one relation is one neuron: its new strength (unknown / primed / active / proven) on every fix event | 0 violations; the unique table R1-R9 allow, every cell fixed; 54 instructions, 0 branches, 0 memory ops. **Live: real-fix coverage 3.4% -> 10.3% across 49 projects (rising to 13.7%), 0.4% -> 17.4% on click's history (INDUCE: 1.2%)** - `results/RELATE_LIVE.md` |
 | `harvest` | keep / skip / recheck / stop one mutation trial | 0 violations; the unique kernel its principles allow |
 | `pick` | which mutation to try next | 0 violations; the unique kernel |
 | `induce` | admit / keep / retire / reject a newly mined class | 0 violations; the unique kernel |
@@ -123,7 +123,8 @@ teacher that discovers exact rules from few examples, a symmetry space that show
 - Repair is bounded by the vocabulary: fluidfix's nine shipped classes generate 14 of 1,729 real benchmark fixes.
 - INDUCE's learning curve on click's history (`neo4d induce-live`) is **flat** at 1.2%: one-token patterns rarely
   recur. The RELATE law (`neo4d relate-live`) answers it with richer patterns - relations and literal edits as neurons -
-  and reaches 14.5% on click and 9.2% across 49 projects; the price is 35-60 candidates per fix line, each a suite run.
+  and reaches 17.4% on click and 10.3% across 49 projects; the price is 50-75 candidates per fix line, each a suite run.
+- A noisy teacher breaks RELATE's precision: with 10% wrong lessons it falls from 82% to 2% on the mutation domain, because R9 spares cheap relations from weakening. Dropping that one exemption restores 58% (`results/DOMAIN_HARD.md`) - a RELATE v2 law, not yet authored. Taught on Python, the mutation domain carries to C at 93% coverage and 85% precision, to C++ and Java at 88-90% coverage but 26-46% precision.
 - The secret renumberings in the live runs were affine - inside the structure by construction.
 - On fluid-router's corpus the numbering decided the winner: 4D wins under a 4D-native numbering, the ring under
   fluidfix's ring numbering.

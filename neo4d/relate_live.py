@@ -18,7 +18,7 @@ everywhere. The body measures each event into one byte (prompts/RELATE_LAW_PROMP
     PREDICTED   applied to the buggy line before this fix was learned, the relation generated the fixed line exactly
     CHEAP       at most 5 candidates per line it fires on, and at most 0.5 per unchanged line
     COSTLY      more than 30 per line it fires on, or more than 35 per unchanged line
-    BARREN      while active it fired on 10+ fix lines and generated fewer than 5% of them
+    BARREN      while active it fired on 100+ fix lines and generated fewer than 5% of them
 
 Policies compared: fluidfix's 9 shipped classes; every relation at first sight (no law); cheap relations at first
 sight; relations seen in two nets; the law (`--law neo4d/kernels/relate.c`); and, before a law exists, the one table
@@ -43,7 +43,8 @@ from neo4d import relations as R
 
 CACHE = BUILD / "relate_cache_v2.pkl"
 CHEAP, COSTLY = (5, 0.5), (30, 35.0)
-BARREN_FIRES, BARREN_YIELD = 10, 0.05
+BARREN_FIRES, BARREN_YIELD = 100, 0.05   # the record behind BARREN: 100 firings - with 10, rare-hitting relations were
+                                         # demoted before their first hit (bugs 9.2% -> 10.3%, click 14.5% -> 17.4%)
 SEEDS = range(8)
 
 
@@ -274,6 +275,7 @@ def table(d, seeds, law, label_law, spec=None):
     for name, r in rows:
         out.append(f"| {name} | **{r['cov']:.1%}** | {r['first']:.1%} | {r['second']:.1%} | {r['fixline']:.1f} | "
                    f"{r['unchanged']:.1f} | {r['active']:.0f} |")
+    table.rows = dict(rows)
     return out
 
 
@@ -306,12 +308,15 @@ def main() -> int:
             f"**{len(c['rows'])} small fixes in {c['nbugs']['click']} fix commits** (the commits INDUCE was replayed "
             "on, `results/INDUCE_LIVE.md`: literal one-token learning reached 1.2% there).", ""]
     out += table(c, [0], law, label)
+    lit = table.rows["literal edits, at first sight (memorisation, no law)"]
+    both = next((v for k, v in table.rows.items() if "over both" in k), None)
     out += ["", "**What this shows.** Across projects, relations generalise where literal edits do not transfer; "
             "inside one project's history, its own literal edits recur and memorising them wins. The same law over "
             "both - memory and generalisation, like episodic and semantic memory - beats the law over either alone "
-            "on both streams, and its coverage keeps rising as it learns. The no-law rows reach more only by "
-            "proposing many times the candidates (on click, every literal edit at first sight: 19.8% at 261 per "
-            "fix line, against the law's 14.5% at 59).", "",
+            "on both streams, and its coverage keeps rising as it learns."
+            + (f" The no-law rows reach more only by proposing many times the candidates (on click, every literal "
+               f"edit at first sight: {lit['cov']:.1%} at {lit['fixline']:.0f} per fix line, against the law's "
+               f"{both['cov']:.1%} at {both['fixline']:.0f})." if both else ""), "",
             "**What this does not show.** Coverage is patch level: a neuron generating the real fixed line. A repair "
             "would still run the suite on every candidate and need the SHIP law. Candidates per unchanged line "
             "multiply by the lines a repair searches; fault localisation decides how many that is."]
