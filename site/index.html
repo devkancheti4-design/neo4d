@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>neo4d Kit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a quiet product page - one idea per band, huge type, lots of air; a single dark band for the proof. */
+:root {
+  --bg: #fbfbfd;
+  --surface: #ffffff;
+  --fill: #f2f2f5;
+  --fg: #1d1d1f;
+  --muted: #6e6e73;
+  --line: #d9d9de;
+  --accent: #0066cc;
+  --accent-ink: #ffffff;
+  --good: #1a8a3a;
+  --stage-bg: #050507;
+  --stage-fg: #f5f5f7;
+  --stage-muted: #a1a1a6;
+  --stage-line: #2c2c31;
+  --stage-accent: #4fa3ff;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --radius: 22px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #000000; --surface: #161618; --fill: #1d1d20; --fg: #f5f5f7; --muted: #8e8e93; --line: #333338;
+    --accent: #3d9bff; --accent-ink: #ffffff; --good: #38c76a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #000000; --surface: #161618; --fill: #1d1d20; --fg: #f5f5f7; --muted: #8e8e93; --line: #333338;
+  --accent: #3d9bff; --accent-ink: #ffffff; --good: #38c76a; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } * { transition: none !important; } }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 17px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; letter-spacing: -0.011em;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1080px; margin-inline: auto; padding-inline: 22px; }
+.narrow { max-width: 720px; }
+h1, h2, h3 { margin: 0; text-wrap: balance; letter-spacing: -0.03em; font-weight: 700; }
+p { margin: 0; }
+.eyebrow { font-size: 14px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: clamp(19px, 2.2vw, 23px); line-height: 1.45; color: var(--muted); font-weight: 500; letter-spacing: -0.015em; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+/* nav */
+.nav {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: saturate(180%) blur(18px); -webkit-backdrop-filter: saturate(180%) blur(18px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
+}
+.nav .wrap { display: flex; align-items: center; gap: 28px; height: 52px; }
+.brand { font-weight: 700; font-size: 19px; color: var(--fg); letter-spacing: -0.04em; }
+.brand span { color: var(--muted); font-weight: 500; }
+.nav-links { display: flex; gap: 26px; margin-left: auto; font-size: 14px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+.nav-links a:hover { opacity: 1; text-decoration: none; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; cursor: pointer;
+  font: 600 15px/1 var(--font); padding: 11px 20px; border-radius: 999px; background: var(--accent);
+  color: var(--accent-ink); transition: filter .2s, transform .2s;
+}
+.btn:hover { filter: brightness(1.08); text-decoration: none; }
+.btn:active { transform: scale(.98); }
+.btn.small { padding: 7px 14px; font-size: 13px; }
+.btn.ghost { background: transparent; color: var(--accent); padding-inline: 4px; }
+.btn.ghost:hover { text-decoration: underline; filter: none; }
+@media (max-width: 680px) { .nav-links { display: none; } .nav .btn { margin-left: auto; } }
+
+/* hero */
+.hero { padding-block: clamp(64px, 10vw, 120px) clamp(48px, 7vw, 88px); text-align: center; }
+.hero h1 { font-size: clamp(46px, 8.2vw, 96px); line-height: 1.02; margin-top: 14px; }
+.hero .lede { max-width: 640px; margin: 22px auto 0; }
+.cta-row { display: flex; gap: 22px; justify-content: center; align-items: center; margin-top: 34px; flex-wrap: wrap; }
+.term {
+  margin: clamp(48px, 7vw, 76px) auto 0; max-width: 760px; text-align: left; background: var(--surface);
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  box-shadow: 0 30px 80px -40px rgba(0,0,0,.35);
+}
+.term-bar { display: flex; gap: 7px; padding: 13px 16px; border-bottom: 1px solid var(--line); background: var(--fill); }
+.term-bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--line); display: block; }
+.term pre { margin: 0; padding: 22px 24px 24px; font: 13.5px/1.75 var(--mono); color: var(--fg); overflow-x: auto; }
+.term .pass { color: var(--good); font-weight: 500; }
+.term .dim { color: var(--muted); }
+
+/* numbers */
+.numbers { padding-block: clamp(40px, 6vw, 72px); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.numbers .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px; }
+.num b { display: block; font-size: clamp(40px, 5vw, 60px); font-weight: 700; letter-spacing: -0.045em; line-height: 1; }
+.num p { margin-top: 12px; color: var(--muted); font-size: 15px; max-width: 220px; }
+@media (max-width: 860px) { .numbers .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .numbers .grid { grid-template-columns: 1fr; } }
+
+/* bands */
+.band { padding-block: clamp(80px, 11vw, 140px); }
+.band h2 { font-size: clamp(36px, 5.4vw, 62px); line-height: 1.04; }
+.band .lede { margin-top: 18px; max-width: 640px; }
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 40px; margin-top: 64px; }
+.step .k { font: 500 13px var(--mono); color: var(--accent); letter-spacing: .04em; }
+.step h3 { font-size: 30px; margin-top: 10px; }
+.step p { margin-top: 12px; color: var(--muted); font-size: 17px; }
+.step .law { margin-top: 14px; font: 500 12.5px var(--mono); color: var(--muted); }
+@media (max-width: 860px) { .steps { grid-template-columns: 1fr; gap: 36px; } }
+
+/* the law, live */
+.lab {
+  margin-top: 56px; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 0;
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+}
+.lab-in { padding: 30px; display: grid; gap: 22px; align-content: start; }
+.lab-out { padding: 30px; background: var(--fill); display: grid; align-content: center; gap: 14px; min-width: 0; }
+.field-label { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 9px; }
+.seg { display: inline-flex; background: var(--fill); border-radius: 12px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button {
+  border: 0; background: transparent; color: var(--fg); font: 500 14px var(--font); padding: 8px 13px; border-radius: 9px;
+  cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); box-shadow: 0 1px 3px rgba(0,0,0,.14); font-weight: 600; }
+.bits { display: flex; flex-wrap: wrap; gap: 8px; }
+.bit {
+  border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; cursor: pointer;
+  font: 500 14px var(--font); padding: 8px 14px; display: inline-flex; gap: 8px; align-items: center;
+}
+.bit::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--line); }
+.bit[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.bit[aria-pressed="true"]::before { background: var(--accent); }
+.word { font: 500 14px var(--mono); color: var(--muted); }
+.word strong { color: var(--fg); font-weight: 500; letter-spacing: .08em; }
+.verdict { font-size: clamp(40px, 5vw, 56px); font-weight: 700; letter-spacing: -0.045em; line-height: 1; }
+.verdict small { display: block; font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--muted); margin-bottom: 8px; }
+.meter { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.meter span { height: 6px; border-radius: 3px; background: var(--line); }
+.meter span.on { background: var(--accent); }
+.why { color: var(--fg); font-size: 16px; }
+.note { color: var(--muted); font-size: 14px; }
+@media (max-width: 860px) { .lab { grid-template-columns: 1fr; } }
+
+/* proof: the one dark band */
+.stage { background: var(--stage-bg); color: var(--stage-fg); }
+.stage .eyebrow, .stage .lede { color: var(--stage-muted); }
+.proof-rows { margin-top: 60px; border-top: 1px solid var(--stage-line); }
+.proof-row {
+  display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) auto; gap: 24px; align-items: baseline;
+  padding-block: 22px; border-bottom: 1px solid var(--stage-line);
+}
+.proof-row .what { font: 500 15px var(--mono); }
+.proof-row .how { color: var(--stage-muted); font-size: 16px; }
+.proof-row .ok { font: 500 13px var(--mono); color: var(--stage-accent); white-space: nowrap; }
+@media (max-width: 760px) { .proof-row { grid-template-columns: 1fr; gap: 6px; } }
+.code {
+  margin-top: 48px; border: 1px solid var(--stage-line); border-radius: var(--radius); overflow-x: auto;
+  background: color-mix(in srgb, var(--stage-fg) 4%, var(--stage-bg));
+}
+.code pre { margin: 0; padding: 24px 26px; font: 13.5px/1.8 var(--mono); color: var(--stage-fg); }
+.code .c { color: var(--stage-muted); }
+.code .k { color: var(--stage-accent); }
+
+/* results */
+.results { margin-top: 56px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.result { padding: 30px 30px 30px 0; border-bottom: 1px solid var(--line); min-width: 0; }
+.result:nth-child(even) { padding-left: 30px; padding-right: 0; border-left: 1px solid var(--line); }
+.result .from { font-size: 15px; color: var(--muted); font-weight: 600; }
+.result .fig { font-size: clamp(38px, 4.4vw, 52px); font-weight: 700; letter-spacing: -0.045em; line-height: 1.05; margin-top: 10px; }
+.result .fig em { font-style: normal; color: var(--muted); font-weight: 600; font-size: .5em; letter-spacing: -0.02em; }
+.result p { margin-top: 10px; color: var(--muted); font-size: 16px; }
+@media (max-width: 760px) {
+  .results { grid-template-columns: 1fr; }
+  .result, .result:nth-child(even) { padding: 26px 0; border-left: 0; }
+}
+.limits { margin-top: 36px; color: var(--muted); font-size: 15px; max-width: 720px; }
+
+/* kit */
+.kit { margin-top: 56px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 44px 40px; }
+.kit h3 { font-size: 20px; letter-spacing: -0.02em; }
+.kit p { margin-top: 8px; color: var(--muted); font-size: 16px; }
+@media (max-width: 860px) { .kit { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .kit { grid-template-columns: 1fr; } }
+
+/* pricing */
+.pricing { background: var(--fill); }
+.toggle { margin-top: 32px; }
+.plans { margin-top: 44px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; align-items: stretch; }
+.plan {
+  background: var(--surface); border-radius: var(--radius); padding: 32px 28px; display: grid; gap: 18px;
+  grid-template-rows: auto auto auto 1fr auto; border: 1px solid var(--line); min-width: 0;
+}
+.plan.rec { border: 2px solid var(--accent); }
+.plan .tag { font: 600 12px var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--accent); min-height: 15px; }
+.plan h3 { font-size: 26px; }
+.price { display: grid; gap: 6px; }
+.price b { font-size: 46px; font-weight: 700; letter-spacing: -0.045em; line-height: 1; font-variant-numeric: tabular-nums; }
+.price span { color: var(--muted); font-size: 14px; }
+.plan ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 11px; align-content: start; }
+.plan li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 15px; }
+.plan li::before { content: "✓"; color: var(--good); font-weight: 700; }
+.plan .btn { width: 100%; }
+.plan .btn.secondary { background: transparent; color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
+.contact {
+  margin-top: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px 22px;
+  font-size: 15px; color: var(--fg);
+}
+.fine { margin-top: 22px; color: var(--muted); font-size: 13px; }
+@media (max-width: 900px) { .plans { grid-template-columns: 1fr; max-width: 480px; } }
+
+/* faq */
+.faq { margin-top: 44px; border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); padding-block: 22px; }
+.faq summary { cursor: pointer; font-size: 20px; font-weight: 600; letter-spacing: -0.02em; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; color: var(--muted); font-weight: 400; font-size: 24px; line-height: 1; }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { margin-top: 12px; color: var(--muted); max-width: 680px; }
+
+footer { padding-block: 40px 56px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+footer .wrap { display: grid; gap: 8px; }
+</style>
+</head>
+<body>
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top">neo4d <span>Kit</span></a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#law">The law</a>
+      <a href="#proof">Proof</a>
+      <a href="#results">Results</a>
+      <a href="#pricing">Pricing</a>
+    </div>
+    <a class="btn small" href="#pricing">Get the Kit</a>
+  </div>
+</nav>
+
+<main id="top">
+  <section class="hero">
+    <div class="wrap">
+      <p class="eyebrow">neo4d Kit</p>
+      <h1>Repair that refuses to guess.</h1>
+      <p class="lede">A repair engine with no neural network. Every decision it makes is a small integer law, checked on
+        every input it can ever receive. It learns your project's fix patterns from your own tests, and ships a fix only
+        when the tests agree.</p>
+      <div class="cta-row">
+        <a class="btn" href="#pricing">See pricing</a>
+        <a class="btn ghost" href="#how">How it works ›</a>
+      </div>
+      <div class="term" role="img" aria-label="Terminal output of neo4d judge: every law passes with 0 violations">
+        <div class="term-bar"><i></i><i></i><i></i></div>
+<pre><span class="dim">$</span> neo4d judge --quick
+
+  swarm laws: oracles + principles fix every table      <span class="pass">PASS</span>
+  route4d    affine GF(2)^4, k = 3                      <span class="pass">PASS</span>
+  route4d5   affine GF(2)^4, k = 5, 64-bit              <span class="pass">PASS</span>
+  harvest · pick · induce · ship                       <span class="pass">PASS</span>
+  route5     GL(5,2), 32 kinds, k = 6                   <span class="pass">PASS</span>
+  relate v1 · relate v2                                <span class="pass">PASS</span>
+
+  ALL LAWS: <span class="pass">0 violations</span></pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="numbers" aria-label="Key figures">
+    <div class="wrap grid">
+      <div class="num"><b>9</b><p>laws, each checked on its whole input space.</p></div>
+      <div class="num"><b>2<sup>64</sup></b><p>inputs proved for the routing law by model checking.</p></div>
+      <div class="num"><b>4 ns</b><p>per routing decision. No branches, no memory reads.</p></div>
+      <div class="num"><b>96%</b><p>of a code-mutation domain learned, on modules it never saw.</p></div>
+    </div>
+  </section>
+
+  <section class="band" id="how">
+    <div class="wrap">
+      <p class="eyebrow">How it works</p>
+      <h2>It learns from your tests.<br>Nothing else.</h2>
+      <p class="lede">Three steps run in a loop, each decided by its own law. Your test suite is the only judge of
+        right and wrong.</p>
+      <div class="steps">
+        <div class="step">
+          <p class="k">1 · LEARN</p>
+          <h3>Experiments</h3>
+          <p>It runs small, targeted edits against your suite and keeps the ones that teach it something. On click,
+            five trials gave five worked examples in twenty suite runs.</p>
+          <p class="law">pick · harvest</p>
+        </div>
+        <div class="step">
+          <p class="k">2 · RELATE</p>
+          <h3>Patterns as neurons</h3>
+          <p>Each fix pattern has a strength. It grows when the pattern predicts a real fix before seeing it, and
+            fades when the pattern keeps firing without being right.</p>
+          <p class="law">relate</p>
+        </div>
+        <div class="step">
+          <p class="k">3 · SHIP</p>
+          <h3>Only what agrees</h3>
+          <p>A fix ships when the suite was failing, turns stably green, and no other candidate also passes.
+            Anything less is refused, with the reason.</p>
+          <p class="law">ship</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="law" style="padding-top:0">
+    <div class="wrap">
+      <p class="eyebrow">The law, live</p>
+      <h2>One neuron. One decision.</h2>
+      <p class="lede">Set what just happened to a fix pattern. The law answers with its new strength. This is the
+        RELATE v2 formula, the same arithmetic as the 48-instruction C kernel, running in your browser.</p>
+
+      <div class="lab">
+        <div class="lab-in">
+          <div>
+            <p class="field-label" id="lvl-label">Current strength</p>
+            <div class="seg" role="group" aria-labelledby="lvl-label" id="level">
+              <button type="button" data-v="0">0 Unknown</button>
+              <button type="button" data-v="1">1 Primed</button>
+              <button type="button" data-v="2">2 Active</button>
+              <button type="button" data-v="3">3 Proven</button>
+            </div>
+          </div>
+          <div>
+            <p class="field-label" id="ev-label">What happened</p>
+            <div class="bits" role="group" aria-labelledby="ev-label">
+              <button type="button" class="bit" data-bit="2" id="b-fire">A fix used this pattern</button>
+              <button type="button" class="bit" data-bit="3" id="b-new">In a new project</button>
+              <button type="button" class="bit" data-bit="4" id="b-pred">It predicted the fix</button>
+            </div>
+          </div>
+          <div>
+            <p class="field-label" id="st-label">What the body measured</p>
+            <div class="bits" role="group" aria-labelledby="st-label">
+              <button type="button" class="bit" data-bit="5" id="b-cheap">Cheap</button>
+              <button type="button" class="bit" data-bit="6" id="b-costly">Costly</button>
+              <button type="button" class="bit" data-bit="7" id="b-barren">Barren record</button>
+            </div>
+          </div>
+          <p class="word">x = <strong id="bin">0b10100010</strong> = <span id="dec">162</span></p>
+        </div>
+        <div class="lab-out" aria-live="polite">
+          <p class="verdict"><small>New strength</small><span id="out">1 Primed</span></p>
+          <div class="meter" aria-hidden="true"><span></span><span></span><span></span></div>
+          <p class="why" id="why">R9: its record is barren, so it weakens. Cheap or not.</p>
+          <p class="note" id="note">One of the five cells v2 changed. v1 kept this pattern active.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band stage" id="proof">
+    <div class="wrap">
+      <p class="eyebrow">Proof</p>
+      <h2>Proved, not promised.</h2>
+      <p class="lede">Each law is a few dozen machine instructions with no branches. A judge checks it against its
+        specification on every possible input, and a model checker proves the routing laws outright. A law that fails
+        one case does not ship.</p>
+      <div class="proof-rows">
+        <div class="proof-row">
+          <span class="what">route4d5</span>
+          <span class="how">All 68,719,476,736 reduced inputs enumerated, then all 2<sup>64</sup> inputs proved
+            equal to an independent reference.</span>
+          <span class="ok">0 mismatches</span>
+        </div>
+        <div class="proof-row">
+          <span class="what">route5</span>
+          <span class="how">32 kinds. Every one of 2<sup>55</sup> inputs proved in 32 parallel slices, and no undefined
+            behaviour on any 64-bit input.</span>
+          <span class="ok">PROVED</span>
+        </div>
+        <div class="proof-row">
+          <span class="what">relate v2</span>
+          <span class="how">114 situations. Exactly one table satisfies its principles, and every single-cell change
+            breaks one.</span>
+          <span class="ok">0 violations</span>
+        </div>
+        <div class="proof-row">
+          <span class="what">pick · harvest · induce · ship</span>
+          <span class="how">All 256 inputs enumerated against their principles.</span>
+          <span class="ok">0 violations</span>
+        </div>
+      </div>
+      <div class="code">
+<pre><span class="c">/* relate v2, R9: a barren pattern weakens unless proven. One comparison. */</span>
+<span class="k">static inline</span> int32_t R9(int32_t x){ <span class="k">return</span> ((x &amp; 3) + (((x ^ (3 + 3)) - 1) &gt;&gt; 31)); }</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="results">
+    <div class="wrap">
+      <p class="eyebrow">Results</p>
+      <h2>Measured on real code.</h2>
+      <p class="lede">Coverage means the right fix is among the candidates it proposes. Each project's fixes are scored
+        before the engine learns from them.</p>
+      <div class="results">
+        <div class="result">
+          <p class="from">Real bugs · 49 projects</p>
+          <p class="fig">10.3% <em>from 3.4%</em></p>
+          <p>BugsInPy, Defects4J and Defects4C. Rising to 13.7% as it learns.</p>
+        </div>
+        <div class="result">
+          <p class="from">A project's own history</p>
+          <p class="fig">17.4% <em>from 0.4%</em></p>
+          <p>click, replayed in commit order. Rising to 24% in the second half.</p>
+        </div>
+        <div class="result">
+          <p class="from">A new language</p>
+          <p class="fig">93% <em>of C mutations</em></p>
+          <p>Taught only Python. 85% of what it proposes is right.</p>
+        </div>
+        <div class="result">
+          <p class="from">A noisy teacher</p>
+          <p class="fig">58% <em>precise, not 2%</em></p>
+          <p>With one lesson in ten wrong, RELATE v2 stays clean where v1 collapsed.</p>
+        </div>
+      </div>
+      <p class="limits">Today it covers about 10–17% of real bugs and edits of up to three tokens. It needs a test
+        suite, and it cannot write a missing line yet. Everything else it refuses.</p>
+    </div>
+  </section>
+
+  <section class="band" style="padding-top:0">
+    <div class="wrap">
+      <p class="eyebrow">In the Kit</p>
+      <h2>Everything to run it,<br>check it, and extend it.</h2>
+      <div class="kit">
+        <div><h3>Nine laws in C</h3><p>Branchless kernels with their specifications. 48 to 105 instructions each.</p></div>
+        <div><h3>Judges</h3><p>Every principle as a predicate, plus a selfcheck that the specification fixes every cell.</p></div>
+        <div><h3>Proof harnesses</h3><p>Model-checking proofs of equivalence and of freedom from undefined behaviour.</p></div>
+        <div><h3>The swarm</h3><p>Fix patterns shared across projects: literal memory and generalised relations together.</p></div>
+        <div><h3>Benchmarks</h3><p>BugsInPy, Defects4J, Defects4C, QuixBugs, click and a full code-mutation domain.</p></div>
+        <div><h3>One command line</h3><p><span class="mono">neo4d judge</span>, <span class="mono">relate-live</span>,
+          <span class="mono">domain-hard</span> and 30 more, each writing its own results file.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band pricing" id="pricing">
+    <div class="wrap">
+      <p class="eyebrow">Pricing</p>
+      <h2>Simple pricing.</h2>
+      <p class="lede">Free for open source and research. A commercial licence for everyone else.</p>
+      <div class="toggle">
+        <div class="seg" role="group" aria-label="Billing period" id="billing">
+          <button type="button" data-p="annual" aria-pressed="true">Billed annually</button>
+          <button type="button" data-p="monthly" aria-pressed="false">Billed monthly</button>
+        </div>
+      </div>
+      <div class="plans">
+        <div class="plan">
+          <p class="tag"></p>
+          <h3>Open</h3>
+          <div class="price"><b>$0</b><span>Free forever</span></div>
+          <ul>
+            <li>The full Kit under AGPL-3.0</li>
+            <li>All nine laws, judges and proofs</li>
+            <li>Command line and benchmarks</li>
+            <li>For open source and research</li>
+          </ul>
+          <a class="btn secondary" href="https://github.com/devkancheti4-design/neo4d">View the source</a>
+        </div>
+        <div class="plan rec">
+          <p class="tag">Recommended</p>
+          <h3>Pro</h3>
+          <div class="price"><b id="pro-price">$29</b><span id="pro-note">per developer, per month, billed $348 a year</span></div>
+          <ul>
+            <li>Commercial licence, no AGPL obligations</li>
+            <li>Every new law as it is authored and proved</li>
+            <li>Onboarding on your own test suite</li>
+            <li>Email support, two business days</li>
+          </ul>
+          <button type="button" class="btn" data-contact="Pro">Choose Pro</button>
+        </div>
+        <div class="plan">
+          <p class="tag"></p>
+          <h3>Enterprise</h3>
+          <div class="price"><b>$24,000</b><span id="ent-note">per year, from</span></div>
+          <ul>
+            <li>Everything in Pro, for every repository</li>
+            <li>Custom laws for your domain, specified and proved</li>
+            <li>On-premises deployment</li>
+            <li>A named engineer and a support SLA</li>
+          </ul>
+          <button type="button" class="btn secondary" data-contact="Enterprise">Talk to us</button>
+        </div>
+      </div>
+      <div class="contact" id="contact" hidden>
+        <strong id="contact-plan">Pro</strong> is arranged directly while checkout is being set up. Reply to the person
+        who shared this page and your licence starts the same week.
+      </div>
+      <p class="fine">Prices in US dollars, before tax. Introductory pricing for the first year.</p>
+    </div>
+  </section>
+
+  <section class="band" id="faq">
+    <div class="wrap narrow">
+      <p class="eyebrow">Questions</p>
+      <h2>Good to know.</h2>
+      <div class="faq">
+        <details>
+          <summary>Is there AI in it?</summary>
+          <p>No neural network and no training. Every decision comes from an integer law you can read, and the judge
+            checks each one on every input before it ships.</p>
+        </details>
+        <details>
+          <summary>Is every fix mathematically proven?</summary>
+          <p>The decision logic is. Each fix is verified by your own test suite: it must turn a failing suite stably
+            green, and no other candidate may pass as well. When the evidence is thin, it asks for one more deciding
+            test instead of shipping.</p>
+        </details>
+        <details>
+          <summary>How much will it fix?</summary>
+          <p>About 10–17% of real bugs today, and more as it sees more of your project. The share of genuinely new fix
+            patterns falls with experience, from 47% to 18% across 706 real fixes.</p>
+        </details>
+        <details>
+          <summary>Which languages?</summary>
+          <p>Python first. Its patterns carry over: taught only Python, it covers 93% of a C mutation domain, and
+            88–90% for C++ and Java, where precision is lower.</p>
+        </details>
+        <details>
+          <summary>What do I need to run it?</summary>
+          <p>Python 3, a C compiler and your test suite. CBMC is optional, for running the formal proofs yourself.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>neo4d Kit</strong> · Laws authored externally and judged by enumeration and model checking.</p>
+    <p>Every figure on this page comes from the results files in the repository.</p>
+    <p>© 2026 neo4d</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  /* RELATE v2 - the same integer arithmetic as neo4d/kernels/relate_v2.c (checked equal on all 256 inputs) */
+  const MAX = (a, b) => b + ((a - b) & ~((a - b) >> 31));
+  const R3 = x => ((x - 4) >> 31) - ((x - 5) >> 31);
+  const R4 = x => (x >> 1) & (x >> 4);
+  const R5 = x => ((x + 3) >> 4) + ((x + 3) >> 4);
+  const R6 = x => (x >> 3) + ((x >> 1) & (x >> 4));
+  const R9 = x => (x & 3) + (((x ^ 6) - 1) >> 31);
+  const R1 = x => ((x + 3) >> 3) + (x & ((x >> 2) - 1));
+  const relate = x => {
+    const g = MAX(MAX(MAX(MAX(x & 3, R3(x & 0x27)), R4(x & 0x24)), R5(x & 0x0F)), R6(x & 0x13));
+    return R1(R9(g | ((x >> 5) & 4) | ((x >> 1) & 8)) | ((x >> 4) & 4));
+  };
+  const NAMES = ["Unknown", "Primed", "Active", "Proven"];
+  const V2_CHANGED = new Set([162, 165, 166, 173, 174]);
+  const B = (x, i) => (x >> i) & 1;
+
+  let x = 162;
+  const levelBtns = [...document.querySelectorAll("#level button")];
+  const bitBtns = [...document.querySelectorAll(".bit")];
+
+  function unreachable(w) {
+    const L = w & 3;
+    if (B(w, 5) && B(w, 6)) return "a pattern is either cheap or costly, not both.";
+    if (B(w, 3) && !B(w, 2)) return "a first use in a new project needs a use.";
+    if (L === 0 && B(w, 4)) return "an unknown pattern cannot have predicted anything.";
+    if (L === 0 && B(w, 7)) return "an unknown pattern has no record yet.";
+    if (L === 0 && B(w, 2) && !B(w, 3)) return "an unknown pattern's first use is always in a new project.";
+    return null;
+  }
+  function reason(w, out) {
+    const L = w & 3, fire = B(w, 2), nw = B(w, 3), pred = B(w, 4), cheap = B(w, 5), costly = B(w, 6), barren = B(w, 7);
+    if (costly) return out === 0 ? "R1: a costly pattern is never used, and this one is not even known yet."
+      : "R1: a costly pattern is never used. It stays remembered as primed, but never proposes a fix.";
+    const grant = Math.max(L, fire ? 1 : 0, fire && cheap ? 2 : 0, fire && nw && L >= 1 ? 2 : 0, pred ? Math.min(L + 1, 3) : 0);
+    if (barren && !pred && grant === 2) return "R9: its record is barren, so it weakens. Cheap or not.";
+    if (out > L && pred && out === Math.min(L + 1, 3)) return "R6: it predicted a real fix before seeing it, so it strengthens by one step.";
+    if (out > L && fire && cheap && out === 2) return "R4: a cheap pattern is used the first time it is seen.";
+    if (out > L && fire && nw && L >= 1) return "R5: it fired in a second project, so it generalises and becomes active.";
+    if (out > L && fire && L === 0) return "R3: first sight primes it. It is remembered, not yet used.";
+    if (L === 3 && barren) return "Proven patterns are consolidated. A barren record does not weaken them.";
+    return "R2: nothing raised it, so its strength is kept.";
+  }
+  function render() {
+    levelBtns.forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.v === (x & 3))));
+    bitBtns.forEach(b => b.setAttribute("aria-pressed", String(!!B(x, +b.dataset.bit))));
+    document.getElementById("bin").textContent = "0b" + x.toString(2).padStart(8, "0");
+    document.getElementById("dec").textContent = String(x);
+    const meter = [...document.querySelectorAll(".meter span")];
+    const bad = unreachable(x);
+    const out = document.getElementById("out"), why = document.getElementById("why"), note = document.getElementById("note");
+    if (bad) {
+      out.textContent = "Can't occur";
+      why.textContent = "This situation never reaches the law: " + bad;
+      note.textContent = "";
+      meter.forEach(m => m.classList.remove("on"));
+      return;
+    }
+    const v = relate(x);
+    out.textContent = v + " " + NAMES[v];
+    why.textContent = reason(x, v);
+    note.textContent = V2_CHANGED.has(x) ? "One of the five cells v2 changed. v1 kept this pattern active." : "";
+    meter.forEach((m, i) => m.classList.toggle("on", i < v));
+  }
+  levelBtns.forEach(b => b.addEventListener("click", () => { x = (x & ~3) | +b.dataset.v; render(); }));
+  bitBtns.forEach(b => b.addEventListener("click", () => { x ^= 1 << +b.dataset.bit; render(); }));
+  render();
+
+  /* pricing */
+  const billing = [...document.querySelectorAll("#billing button")];
+  billing.forEach(b => b.addEventListener("click", () => {
+    billing.forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+    const annual = b.dataset.p === "annual";
+    document.getElementById("pro-price").textContent = annual ? "$29" : "$35";
+    document.getElementById("pro-note").textContent = annual
+      ? "per developer, per month, billed $348 a year" : "per developer, per month, cancel any time";
+    document.getElementById("ent-note").textContent = annual ? "per year, from" : "per year, from · annual contracts only";
+  }));
+  document.querySelectorAll("[data-contact]").forEach(b => b.addEventListener("click", () => {
+    const box = document.getElementById("contact");
+    document.getElementById("contact-plan").textContent = b.dataset.contact;
+    box.hidden = false;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }));
+})();
+</script>
+</body>
+</html>
