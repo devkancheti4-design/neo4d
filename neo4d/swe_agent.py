@@ -27,6 +27,7 @@ import ast
 import concurrent.futures as cf
 import datetime
 import json
+import math
 import os
 import random
 import re
@@ -198,15 +199,29 @@ def keywords(issue, k=12):
 
 
 def localise(env, issue, model, traj, seed):
+    """A file scores the specificity of the issue's identifiers it mentions - a word found in few files says more than
+    one found in hundreds (log(N / files with it)) - and that much again where it defines one (class / def)."""
     kws = keywords(issue)
+    _, out = env.run("git ls-files '*.py' | wc -l", timeout=120)
+    n = int(out.split()[-1]) if out.split() and out.split()[-1].isdigit() else 1000
     hits = Counter()
+
+    def source(out):
+        return [p.lstrip("./") for p in out.split()
+                if "test" not in p.lower() and not p.lstrip("./").startswith(("doc", "docs/", "examples"))]
     for w in kws:
-        _, out = env.run(f"grep -rl --include=*.py -w {json.dumps(w)} . 2>/dev/null | head -200", timeout=120)
-        for p in out.split():
-            p = p.lstrip("./")
-            if "test" not in p.lower() and not p.startswith(("doc", "docs/", "examples")):
-                hits[p] += 1
-    top = [p for p, _ in hits.most_common(15)]
+        _, out = env.run(f"grep -rl --include=*.py -w {json.dumps(w)} . 2>/dev/null", timeout=120)
+        found = source(out)
+        if not found:
+            continue
+        weight = math.log((max(n, len(found)) + 1) / len(found))
+        for p in found:
+            hits[p] += weight
+        _, out = env.run(f"grep -rlE --include=*.py {json.dumps(rf'^[[:space:]]*(class|def)[[:space:]]+{w}[^A-Za-z0-9_]')} . "
+                         "2>/dev/null", timeout=120)
+        for p in source(out):
+            hits[p] += weight
+    top = [p for p, _ in sorted(hits.items(), key=lambda kv: (-kv[1], kv[0]))[:15]]
     traj.append(dict(kind="localise", keywords=kws, candidates=top))
     if not top:
         return None
@@ -237,21 +252,38 @@ def excerpt(text, kws, width=60, whole=600):
     return "\n".join(out)
 
 
+def package_of(path):
+    """The importable package a repository file belongs to: its first directory that is not lib/ or src/."""
+    dirs = [p for p in Path(path).parts[:-1] if p not in ("lib", "src")]
+    return dirs[0] if dirs else Path(path).stem
+
+
+def imports(script, pkg):
+    names = "|".join(sorted({re.escape(pkg), re.escape(pkg.lstrip("_"))}))
+    return re.search(rf"^\s*(from|import)\s+({names})\b", script, re.M) is not None
+
+
 def reproduce(env, issue, path, shown, model, traj, seed, tries=3):
-    """A script that fails now and should pass once the issue is fixed."""
+    """A script that fails now and should pass once the issue is fixed. It must import the repository's package: a
+    script that re-implements the code it is about can never be fixed by an edit to the repository."""
+    pkg = package_of(path)
     for k in range(tries):
         reply = generate(model, f"An issue in a Python repository (the repository is the current directory and is "
                          f"importable):\n\n{issue[:6000]}\n\nThe code most likely involved, `{path}`:\n```\n{shown}\n```\n\n"
                          "Write a short standalone Python script that REPRODUCES the issue: it must exit with status 0 "
                          "only if the issue is fixed, and fail (for example with an AssertionError) while it is not. "
+                         f"It must import and call the repository's own code (the package `{pkg}`), not a copy of it. "
                          "Reply with the script in one ```python code block.", 0.0 if k == 0 else 0.7, seed + k, traj,
                          predict=900)
         script = code_block(reply)
         if not script:
             continue
+        if not imports(script, pkg):
+            traj.append(dict(kind="reproduce", rejected=f"does not import {pkg}"))
+            continue
         env.write(env.repro, script)
         code, out = env.py(env.repro)
-        traj.append(dict(kind="reproduce", code=code, output=out[-2000:]))
+        traj.append(dict(kind="reproduce", code=code, output=out[-2000:], script=script))
         broken = any(s in out for s in ("SyntaxError", "ModuleNotFoundError", "ImportError: cannot import name"))
         if code != 0 and not broken:
             return script, out
