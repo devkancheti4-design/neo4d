@@ -7,10 +7,10 @@ from neo4d import swe_agent as S
 from neo4d import swe_full as F
 
 BUGGY = "def gcd(a, b):\n    if b == 1:\n        return a\n    return gcd(b, a % b)\n"
-TESTS = "import sys\nsys.path.insert(0, '.')\nfrom gcd import gcd\n\n\ndef test_same():\n    assert gcd(7, 7) == 7\n"
+TESTS = "import sys\nsys.path.insert(0, '.')\nfrom gcd import gcd\n\n\ndef test_same():\n    assert gcd(1, 1) == 1\n"
 ISSUE = "`gcd(17, 0)` raises ZeroDivisionError instead of returning 17; `gcd` should stop when b is 0."
 REPRO = ("import sys\nsys.path.insert(0, '.')\nfrom gcd import gcd\nassert gcd(17, 0) == 17\nassert gcd(35, 21) == 7\n"
-         "assert gcd(5, 1) == 1\n")
+         "assert gcd(5, 1) == 1\nassert gcd(4, -2) == -2\n")
 
 
 def fake(model, prompt, temperature, seed, traj, predict=2048):
