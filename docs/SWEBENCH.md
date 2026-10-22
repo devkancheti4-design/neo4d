@@ -62,7 +62,8 @@ python -m neo4d.swe_agent run --condition model --model qwen2.5-coder:7b --ids i
 python -m neo4d.swe_agent run --condition neo4d --model qwen2.5-coder:7b --ids ids_smoke.txt --workers 1 --out runs/smoke_neo4d
 ```
 
-Check `runs/smoke_*/trajs/django__django-11099.json`:
+Check `runs/smoke_*/trajs/django__django-11099.json` (and, for any run, `python -m neo4d.swe_agent diagnose --run <run>
+--report <harness report> [--gold-repro]` - where issues are lost; it reads the gold patch, so use it for analysis only):
 
 - a `localise` entry with candidate files (empty means the keyword search found nothing),
 - a `reproduce` entry with a non-zero `code` (the reproduction fails before the fix),

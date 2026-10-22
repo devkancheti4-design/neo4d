@@ -333,11 +333,13 @@ def solve(env, instance, model, condition, seed=0, rounds=ROUNDS):
     traj = [dict(kind="start", instance_id=instance["instance_id"], condition=condition, model=model)]
     issue = instance["problem_statement"]
     path = localise(env, issue, model, traj, seed)
+    traj.append(dict(kind="file", path=path))
     if not path:
         return "", traj
     original = env.read(path)
     kws = keywords(issue)
     script, failing = reproduce(env, issue, path, excerpt(original, kws), model, traj, seed)
+    traj.append(dict(kind="reproduction", script=script))
     files = related_tests(env, path)
     regress = test_command(instance, files)
     base_ok = False
@@ -467,6 +469,79 @@ def resolved(report):
     raise SystemExit(f"{report}: no resolved_ids in this report")
 
 
+def _kept_script(tr):
+    """The reproduction the run kept (from the explicit entry, or - for older runs - the last model reply whose
+    reproduction failed for a reason other than a broken script)."""
+    for e in tr:
+        if e["kind"] == "reproduction":
+            return e["script"]
+    kept, last = None, None
+    for e in tr:
+        if e["kind"] == "model" and "REPRODUCES" in e["prompt"]:
+            last = code_block(e["response"])
+        elif e["kind"] == "reproduce" and last is not None:
+            broken = any(x in e["output"] for x in ("SyntaxError", "ModuleNotFoundError", "ImportError: cannot import name"))
+            if e["code"] != 0 and not broken:
+                kept = last
+            last = None
+    return kept
+
+
+def diagnose(args):
+    """Where a run loses issues. ANALYSIS ONLY: it reads the gold patch, so nothing it shows may shape a reported run -
+    if it changes the agent, the pilot becomes a design run and results come from fresh seeds."""
+    insts = {x["instance_id"]: x for x in load_instances(args.dataset, args.split)}
+    resolved_ids = resolved(args.report) if args.report else None
+    steps = Counter()
+    rows = []
+    for t in sorted((Path(args.run) / "trajs").glob("*.json")):
+        tr, iid = json.loads(t.read_text()), t.stem
+        inst = insts[iid]
+        gold = set(re.findall(r"^diff --git a/(\S+)", inst["patch"], re.M))
+        cands = next((e["candidates"] for e in tr if e["kind"] == "localise"), [])
+        chosen = next((e["path"] for e in tr if e["kind"] == "file"), None)
+        if chosen is None:
+            m = next((re.search(r"The file `(.+?)` \(with line numbers\)", e["prompt"]) for e in tr
+                      if e["kind"] == "model" and "Fix the issue" in e["prompt"]), None)
+            chosen = m.group(1) if m else None
+        script = _kept_script(tr)
+        fix_calls = sum(e["kind"] == "model" and "Fix the issue" in e["prompt"] for e in tr)
+        applied = sum(e["kind"] == "round" for e in tr)
+        passed = any(e["kind"] == "round" and e.get("reproduction") for e in tr)
+        shipped = any(e["kind"] == "neo4d" and e.get("shipped") for e in tr)
+        diff = next((e["diff"] for e in tr if e["kind"] == "end"), "")
+        row = dict(id=iid, gold_in_candidates=bool(gold & set(cands)), right_file=chosen in gold, reproduction=bool(script),
+                   edit_applied=applied > 0, failed_edits=fix_calls - applied, reproduction_passed=passed or shipped,
+                   neo4d_shipped=shipped, patch=bool(diff.strip()),
+                   resolved=(iid in resolved_ids) if resolved_ids is not None else None)
+        if args.gold_repro and script:
+            env = DockerEnv(image_of(iid, args.image), f"neo4d_diag_{iid}".replace("/", "_"))
+            try:
+                env.write("/tmp/gold.patch", inst["patch"])
+                env.run("git apply /tmp/gold.patch", timeout=120)
+                env.write(env.repro, script)
+                row["reproduction_valid"] = env.py(env.repro)[0] == 0
+            finally:
+                env.close()
+        rows.append(row)
+        for k, v in row.items():
+            if v is True:
+                steps[k] += 1
+    n = len(rows)
+    order = ["gold_in_candidates", "right_file", "reproduction", "reproduction_valid", "edit_applied",
+             "reproduction_passed", "neo4d_shipped", "patch", "resolved"]
+    print(f"{args.run}: {n} issues (analysis only - uses the gold patch)")
+    for k in order:
+        if k == "reproduction_valid" and not args.gold_repro:
+            continue
+        if k == "resolved" and resolved_ids is None:
+            continue
+        print(f"  {k:22s} {steps[k]:3d} / {n}")
+    print(f"  {'failed_edits (total)':22s} {sum(r['failed_edits'] for r in rows):3d}")
+    (Path(args.run) / "diagnose.json").write_text(json.dumps(rows, indent=1))
+    return 0
+
+
 def compare(args):
     """The paper's numbers from two official reports (the same instances): resolved, the paired exact test, the cost."""
     from math import comb
@@ -513,13 +588,20 @@ def main() -> int:
     p.add_argument("--name")
     p.add_argument("--eval-logs")
     p.add_argument("--report")
+    g = sub.add_parser("diagnose", help="where a run loses issues (analysis only: reads the gold patch)")
+    g.add_argument("--run", required=True)
+    g.add_argument("--dataset", default="princeton-nlp/SWE-bench_Lite")
+    g.add_argument("--split", default="test")
+    g.add_argument("--report", help="the harness report, to add the resolved step")
+    g.add_argument("--gold-repro", action="store_true", help="(Docker) does each kept reproduction pass with the gold patch?")
+    g.add_argument("--image", default="swebench/sweb.eval.x86_64.{id}:latest")
     c = sub.add_parser("compare")
     c.add_argument("--model-report", required=True)
     c.add_argument("--neo4d-report", required=True)
     c.add_argument("--model-run", required=True)
     c.add_argument("--neo4d-run", required=True)
     a = ap.parse_args()
-    return {"run": run, "package": package, "compare": compare}[a.cmd](a)
+    return {"run": run, "package": package, "compare": compare, "diagnose": diagnose}[a.cmd](a)
 
 
 if __name__ == "__main__":

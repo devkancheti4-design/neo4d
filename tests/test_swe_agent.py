@@ -49,3 +49,20 @@ def test_edits_with_copied_line_numbers_still_apply():
     assert S.edits_of("/testbed/pkg/m.py\n<<<<<<< SEARCH\na\n=======\nb\n>>>>>>> REPLACE")[0][0] == "pkg/m.py"
     assert S.image_of("django__django-11099", "swebench/sweb.eval.x86_64.{id}:latest") == \
         "swebench/sweb.eval.x86_64.django_1776_django-11099:latest"
+
+
+def test_diagnose_reads_a_run(tmp_path, monkeypatch, capsys):
+    import argparse
+    import json
+    monkeypatch.setattr(S, "generate", fake)
+    inst = dict(instance_id="t__gcd-1", repo="t/gcd", version="0", problem_statement=ISSUE,
+                patch="diff --git a/gcd.py b/gcd.py\n")
+    (tmp_path / "repo").mkdir()
+    _, traj = S.solve(checkout(tmp_path / "repo"), inst, "fake", "neo4d", rounds=2)
+    run = tmp_path / "run"
+    (run / "trajs").mkdir(parents=True)
+    (run / "trajs" / "t__gcd-1.json").write_text(json.dumps(traj))
+    monkeypatch.setattr(S, "load_instances", lambda d, s: [inst])
+    S.diagnose(argparse.Namespace(run=str(run), dataset="x", split="test", report=None, gold_repro=False, image=""))
+    rows = json.loads((run / "diagnose.json").read_text())
+    assert rows[0]["right_file"] and rows[0]["reproduction"] and rows[0]["neo4d_shipped"] and rows[0]["patch"]
