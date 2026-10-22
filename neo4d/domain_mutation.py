@@ -242,7 +242,26 @@ def neurons_of(a, m, scope):
             ctx = R.relation(list(at[0]), list(at[1]), scope)
             if R.generative(ctx):
                 keys.append(("ctx", ctx))
+        for kind, left, right in (("ctx2", 2, 0), ("ctxlr", 1, 1)):
+            w = _context(a, list(m), o, n, left, right)
+            if w is not None:
+                rel_w = R.relation(list(w[0]), list(w[1]), scope)
+                if R.generative(rel_w):
+                    keys.append((kind, rel_w))
     return keys
+
+
+def _context(a, m, o, n, left, right):
+    """The edit with `left` tokens of context before it and `right` after it kept in the pattern: `if ( -> if ( not`
+    (two before), `0 x10` read whole (one each side). None where the line has no such context."""
+    i = 0
+    while i < min(len(a), len(m)) and a[i] == m[i]:
+        i += 1
+    end = i + len(o)
+    if i < left or len(a) - end < right:
+        return None
+    lc, rc = tuple(a[i - left:i]), tuple(a[end:end + right])
+    return lc + tuple(o) + rc, lc + tuple(n) + rc
 
 
 class Domain:
