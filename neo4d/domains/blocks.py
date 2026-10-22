@@ -77,6 +77,7 @@ def naive(task):
 
 class Blocks(Domain):
     name = "blocks"
+    predict = 160                                          # 15 moves read at most (3 per block) need about 100 tokens
 
     def tasks(self, n, seed):
         rng = random.Random(seed)

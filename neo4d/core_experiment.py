@@ -137,7 +137,10 @@ DESIGN_NOTES = {
         "numbers and targets up to 200, the answer asked for without its value; Blocks with 3-5 blocks, the top blocks "
         "named in the prompt, replies read up to three moves per block, and a checker that skips an illegal move and "
         "penalises it instead of stopping at it; a check budget of 100 per task as the main setting. Every method gets "
-        "the same prompt and checker.",
+        "the same prompt and checker. Run 98 was interrupted; it also showed that the core searched only two changes deep "
+        "around each model attempt while search alone searched four - an inconsistency, fixed (four for both) before it was "
+        "run again. For time, Blocks replies are cut at 160 tokens (the 15 moves read at most need about 100); this "
+        "changes no outcome, since longer replies were already cut to 15 moves.",
 }
 
 

@@ -44,6 +44,7 @@ result with the command that produced it.
 | `.build/` | working files and logs of runs - not committed |
 | `paper/` | the paper, its Zenodo metadata and `ZENODO_UPLOAD.md` |
 | `docs/SWEBENCH.md` | the SWE-bench guide |
+| `docs/MUTATION.md` | how mutation works (operators, grading, search, learning, memory, the law), the domain-free core and how to write an adapter, where it fits beyond code |
 | `docs/SUBAGENT_PROMPTS.md` | the exact prompts given to the Claude subagents |
 
 ## 3. Setup

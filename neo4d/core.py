@@ -31,6 +31,7 @@ OLLAMA = "http://localhost:11434/api/generate"
 class Domain:
     """What a domain must supply. Candidates and patterns must be hashable."""
     name = "domain"
+    predict = 400                                          # the longest model reply the domain needs (tokens)
 
     def prompt(self, task, feedback=None):                 # -> str
         raise NotImplementedError
@@ -170,7 +171,7 @@ def solve(dom, task, model, method, memory=None, calls=4, checks=400, seed=0):
         feedback = None
         for k in range(n):
             reply = generate(model, dom.prompt(task, feedback if method != "sample" else None),
-                             0.0 if k == 0 else 0.8, seed * 1000 + k, stats)
+                             0.0 if k == 0 else 0.8, seed * 1000 + k, stats, predict=dom.predict)
             cand = dom.parse(task, reply)
             if cand is None:
                 feedback = "That answer could not be read; follow the requested format exactly."
@@ -181,7 +182,7 @@ def solve(dom, task, model, method, memory=None, calls=4, checks=400, seed=0):
                 how, sol = "model", cand
                 break
             if use_mutation:
-                found, best = search(dom, task, [cand], stats["checks"] + checks // n, stats)
+                found, best = search(dom, task, [cand], stats["checks"] + checks // n, stats, depth=4)   # as search alone
                 if found is not None:
                     how, sol = "neo4d", found
                     break
