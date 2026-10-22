@@ -360,8 +360,9 @@ def mutate_patch(env, path, original, patched, regress, base_ok, traj, cap=VARIA
     return None, notes
 
 
-def solve(env, instance, model, condition, seed=0, rounds=ROUNDS):
-    """-> (the diff to submit, the trajectory)"""
+def solve(env, instance, model, condition, seed=0, rounds=ROUNDS, memory=None, lessons=None):
+    """-> (the diff to submit, the trajectory). neo4d_full: neo4d's repair laws (neo4d/swe_full.py) with `memory`; a fix
+    the agent verified is appended to `lessons` for the memory to learn after this wave."""
     traj = [dict(kind="start", instance_id=instance["instance_id"], condition=condition, model=model)]
     issue = instance["problem_statement"]
     path = localise(env, issue, model, traj, seed)
@@ -377,10 +378,20 @@ def solve(env, instance, model, condition, seed=0, rounds=ROUNDS):
         base_ok = env.run(regress, timeout=900)[0] == 0
     traj.append(dict(kind="regression", command=regress, passes_before=base_ok))
     feedback = f"The reproduction fails now:\n{(failing or '')[-1500:]}" if script else ""
-    for r in range(rounds):
+    full, marks, shipped = condition == "neo4d_full", [], None
+    if full and script:
+        from neo4d import swe_full as F
+        shipped, marks, evidence = F.before_rounds(env, path, original, issue, kws, failing, regress, base_ok, memory, traj)
+        if shipped is not None:
+            env.write(path, shipped)
+            if lessons is not None:
+                lessons.append((instance["repo"], original, shipped))
+        feedback += f"\n\n{evidence}" if evidence else ""
+    for r in range(rounds if shipped is None else 0):
         text = env.read(path)
+        shown = F.mark(excerpt(text, kws), marks) if (full and marks and text == original) else excerpt(text, kws)
         prompt = (f"An issue in a Python repository:\n\n{issue[:6000]}\n\nThe file `{path}` (with line numbers):\n```\n"
-                  f"{excerpt(text, kws)}\n```\n\n" + (f"A script that reproduces the issue:\n```python\n{script}\n```\n\n" if script else "")
+                  f"{shown}\n```\n\n" + (f"A script that reproduces the issue:\n```python\n{script}\n```\n\n" if script else "")
                   + (f"{feedback}\n\n" if feedback else "")
                   + "Fix the issue. Reply with one or more edits in exactly this form, nothing else:\n"
                   f"{path}\n<<<<<<< SEARCH\n<exact lines from the file>\n=======\n<the new lines>\n>>>>>>> REPLACE")
@@ -403,8 +414,18 @@ def solve(env, instance, model, condition, seed=0, rounds=ROUNDS):
         ok, still, out = check(env, regress if base_ok else None)
         traj.append(dict(kind="round", round=r, reproduction=ok, regression_ok=still, output=(out or "")[-1500:]))
         if ok and still is not False:
+            if full and lessons is not None:
+                lessons.append((instance["repo"], original, text))
             break
-        if condition == "neo4d":
+        if full:
+            var, notes = F.after_edit(env, path, original, text, issue, regress, base_ok, memory, traj, VARIANTS)
+            if var is not None:
+                env.write(path, var)
+                if lessons is not None:
+                    lessons.append((instance["repo"], original, var))
+                break
+            feedback = f"Your edit was applied, but the reproduction still fails:\n{(out or '')[-1200:]}\n{notes}"
+        elif condition == "neo4d":
             var, notes = mutate_patch(env, path, original, text, regress, base_ok, traj)
             if var is not None:
                 break
@@ -438,17 +459,25 @@ def run(args):
     preds = out / "all_preds.jsonl"
     done = {json.loads(l)["instance_id"] for l in preds.read_text().splitlines()} if preds.exists() else set()
     todo = [x for x in insts if x["instance_id"] not in done]
-    name = f"neo4d+{args.model}" if args.condition == "neo4d" else args.model
+    name = {"neo4d": f"neo4d+{args.model}", "neo4d_full": f"neo4d-full+{args.model}"}.get(args.condition, args.model)
     (out / "run.json").write_text(json.dumps(dict(vars(args), started=datetime.datetime.now().isoformat(),
                                                    instances=[x["instance_id"] for x in insts]), indent=1))
     print(f"{len(todo)} instances to do ({len(done)} already done) -> {out}", flush=True)
+
+    full = args.condition == "neo4d_full"
+    if full:
+        from neo4d import swe_full as F
+        memory = F.Memory.load(out / "memory.pkl")
+    lessons = {}
 
     def one(inst):
         t0 = time.time()
         env = DockerEnv(image_of(inst["instance_id"], args.image),           # one name per run: runs can share a machine
                         f"neo4d_{out.resolve().name}_{inst['instance_id']}".replace("/", "_"))
+        mine = lessons.setdefault(inst["instance_id"], [])
         try:
-            diff, traj = solve(env, inst, args.model, args.condition, args.seed, args.rounds)
+            diff, traj = solve(env, inst, args.model, args.condition, args.seed, args.rounds,
+                               memory if full else None, mine if full else None)
         finally:
             env.close()
         traj.append(dict(kind="time", seconds=round(time.time() - t0, 1),
@@ -456,11 +485,21 @@ def run(args):
         (out / "trajs" / f"{inst['instance_id']}.json").write_text(json.dumps(traj, indent=1))
         return dict(instance_id=inst["instance_id"], model_name_or_path=name, model_patch=diff)
 
+    # neo4d_full learns between waves of `workers` issues, in instance order, so its memory never depends on timing
+    waves = [todo[i:i + args.workers] for i in range(0, len(todo), args.workers)] if full else [todo]
+    n = 0
     with cf.ThreadPoolExecutor(max_workers=args.workers) as pool:
-        for n, pred in enumerate(pool.map(one, todo), 1):
-            with preds.open("a") as f:
-                f.write(json.dumps(pred) + "\n")
-            print(f"  {n}/{len(todo)} {pred['instance_id']}: {'patch' if pred['model_patch'] else 'no patch'}", flush=True)
+        for wave in waves:
+            for pred in pool.map(one, wave):
+                n += 1
+                with preds.open("a") as f:
+                    f.write(json.dumps(pred) + "\n")
+                print(f"  {n}/{len(todo)} {pred['instance_id']}: {'patch' if pred['model_patch'] else 'no patch'}", flush=True)
+            if full:
+                for i in sorted(x["instance_id"] for x in wave):
+                    for repo, before, after in lessons.pop(i, []):
+                        memory.learn_fix(repo, before, after)
+                memory.save(out / "memory.pkl")
     return 0
 
 
@@ -469,7 +508,8 @@ def package(args):
     metadata.yaml, README.md and the harness's report."""
     runp = Path(args.run)
     meta = json.loads((runp / "run.json").read_text())
-    name = args.name or (f"neo4d_{meta['model']}" if meta["condition"] == "neo4d" else meta["model"]).replace(":", "-").replace("/", "-")
+    label = {"neo4d": f"neo4d_{meta['model']}", "neo4d_full": f"neo4d-full_{meta['model']}"}.get(meta["condition"], meta["model"])
+    name = args.name or label.replace(":", "-").replace("/", "-")
     dest = Path(args.dest) / f"{datetime.date.today():%Y%m%d}_{name}"
     (dest / "trajs").mkdir(parents=True, exist_ok=True)
     shutil.copy(runp / "all_preds.jsonl", dest / "all_preds.jsonl")
@@ -528,7 +568,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(prog="neo4d.swe_agent")
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
-    r.add_argument("--condition", choices=("neo4d", "model"), required=True)
+    r.add_argument("--condition", choices=("neo4d", "model", "neo4d_full"), required=True)
     r.add_argument("--model", required=True, help="an ollama model, e.g. qwen2.5-coder:7b")
     r.add_argument("--dataset", default="princeton-nlp/SWE-bench_Lite")
     r.add_argument("--split", default="test")
