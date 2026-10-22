@@ -1,0 +1,15 @@
+cff-version: 1.2.0
+message: "If you use neo4d, please cite the paper."
+title: "neo4d"
+authors:
+  - family-names: "LASTNAME"
+    given-names: "Firstname"
+repository-code: "https://github.com/devkancheti4-design/neo4d"
+license: AGPL-3.0-only
+preferred-citation:
+  type: article
+  title: "Guess Close, Search Exact: A Formally Verified, Model-Free Memory and Mutation Engine for Language-Model Agents"
+  authors:
+    - family-names: "LASTNAME"
+      given-names: "Firstname"
+  year: 2026
