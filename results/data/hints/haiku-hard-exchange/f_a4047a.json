@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_a4047a(_0x9516f5f31a, _0x673b865f10):\n    if _0x673b865f10 == 0:\n        return _0x9516f5f31a\n    else:\n        return f_a4047a(_0x673b865f10, _0x9516f5f31a % _0x673b865f10)\n"
+ ],
+ "how": "model"
+}

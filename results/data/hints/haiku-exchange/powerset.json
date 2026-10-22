@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def powerset(arr):\n    if arr:\n        first, *rest = arr #python3 just like car and cdr (in this case anyway..)\n        rest_subsets = powerset(rest)\n        return rest_subsets + [[first] + subset for subset in rest_subsets]\n    else:\n        return [[]]\n"
+ ],
+ "how": "model"
+}

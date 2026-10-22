@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def max_sublist_sum(arr):\n    max_ending_here = 0\n    max_so_far = 0\n\n    for x in arr:\n        max_ending_here = max(0, max_ending_here + x)\n        max_so_far = max(max_so_far, max_ending_here)\n\n    return max_so_far\n\n\n\"\"\"\nMax Sublist Sum\nmax-sublist-sum\n\nEfficient equivalent to max(sum(arr[i:j]) for 0 <= i <= j <= len(arr))\n\nAlgorithm source: WordAligned.org by Thomas Guest\n\n\nInput:\n    arr: A list of ints\n\nOutput:\n    The maximum sublist sum\n\nExample:\n    >>> max_sublist_sum([4, -5, 2, 1, -1, 3])\n    5\n\"\"\"\n"
+ ],
+ "how": "model"
+}

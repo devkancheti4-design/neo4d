@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_a00472(_0x42cbf51f5f):\n    for _0x3bff55042f in range(len(_0x42cbf51f5f) - 2, -1, -1):\n        if _0x42cbf51f5f[_0x3bff55042f] < _0x42cbf51f5f[_0x3bff55042f + 1]:\n            for _0xb5b62fe9fd in range(len(_0x42cbf51f5f) - 1, _0x3bff55042f, -1):\n                if _0x42cbf51f5f[_0x3bff55042f] < _0x42cbf51f5f[_0xb5b62fe9fd]:\n                    _0xf56b9168d7 = list(_0x42cbf51f5f)\n                    _0xf56b9168d7[_0x3bff55042f], _0xf56b9168d7[_0xb5b62fe9fd] = (_0x42cbf51f5f[_0xb5b62fe9fd], _0x42cbf51f5f[_0x3bff55042f])\n                    _0xf56b9168d7[_0x3bff55042f + 1:] = reversed(_0xf56b9168d7[_0x3bff55042f + 1:])\n                    return _0xf56b9168d7\n"
+ ],
+ "how": "model"
+}

@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_8a01fc(_0xf2f2f9e387):\n    _0x8286f90856 = 0\n    for _0x3772935060 in _0xf2f2f9e387:\n        if _0x3772935060 == '(':\n            _0x8286f90856 += 1\n        else:\n            _0x8286f90856 -= 1\n            if _0x8286f90856 < 0:\n                return False\n    return _0x8286f90856 == 0\n"
+ ],
+ "how": "model"
+}

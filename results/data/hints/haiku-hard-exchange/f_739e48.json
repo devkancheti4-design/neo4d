@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_739e48(_0x57404e4a4c):\n    if _0x57404e4a4c == 1:\n        return []\n    for _0x3bff55042f in range(2, int(_0x57404e4a4c ** 0.5) + 1):\n        if _0x57404e4a4c % _0x3bff55042f == 0:\n            return [_0x3bff55042f] + f_739e48(_0x57404e4a4c // _0x3bff55042f)\n    return [_0x57404e4a4c]\n"
+ ],
+ "how": "model"
+}

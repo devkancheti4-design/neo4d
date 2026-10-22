@@ -1,0 +1,1 @@
+[[{"tool": "replace", "path": "qb/lis.py", "old": "def lis(arr):", "new": "def lis(arr, verbose=False):"}, "replaced 2 occurrence(s)", null], [{"tool": "test"}, "31/31 test files pass\n", null], [{"tool": "done"}, "done", null]]

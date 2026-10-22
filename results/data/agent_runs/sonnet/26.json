@@ -1,0 +1,1 @@
+[[{"tool": "grep", "pattern": "\\babs\\b", "path": "qb"}, "qb/sqrt.py:4: while abs(x - approx ** 2) > epsilon:\nqb/sqrt.py:11: while abs(x - approx * approx) > epsilon:", ["qb/sqrt.py"]], [{"tool": "write", "path": "answer.txt", "content": "sqrt\n"}, "written", null], [{"tool": "done"}, "done", null]]

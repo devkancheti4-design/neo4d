@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "# Python 3\ndef possible_change(coins, total):\n    if total == 0:\n        return 1\n    if total < 0 or not coins:\n        return 0\n\n    first, *rest = coins\n    return possible_change(coins, total - first) + possible_change(rest, total)\n"
+ ],
+ "how": "model"
+}

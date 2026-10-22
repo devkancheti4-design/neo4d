@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_7e2131(_0x881ada2358, _0x957af8744e):\n    _0xfa91e4aa87 = _0x881ada2358 / 2\n    while abs(_0x881ada2358 - _0xfa91e4aa87 ** 2) > _0x957af8744e:\n        _0xfa91e4aa87 = 0.5 * (_0xfa91e4aa87 + _0x881ada2358 / _0xfa91e4aa87)\n    return _0xfa91e4aa87\n"
+ ],
+ "how": "model"
+}

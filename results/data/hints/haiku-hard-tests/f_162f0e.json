@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_162f0e(_0xee7bffbbe8, _0x881ada2358):\n\n    def binsearch(_0x31752b999f, _0xb94b38def4):\n        if _0x31752b999f > _0xb94b38def4:\n            return -1\n        _0xf1553cc642 = (_0x31752b999f + _0xb94b38def4) // 2\n        if _0x881ada2358 < _0xee7bffbbe8[_0xf1553cc642]:\n            return binsearch(_0x31752b999f, _0xf1553cc642 - 1)\n        elif _0x881ada2358 > _0xee7bffbbe8[_0xf1553cc642]:\n            return binsearch(_0xf1553cc642 + 1, _0xb94b38def4)\n        else:\n            return _0xf1553cc642\n    return binsearch(0, len(_0xee7bffbbe8) - 1)\n"
+ ],
+ "how": "model"
+}

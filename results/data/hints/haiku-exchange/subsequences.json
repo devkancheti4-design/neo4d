@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def subsequences(a, b, k):\n    if k == 0:\n        return [[]]\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        ret.extend(\n            [i] + rest for rest in subsequences(i + 1, b, k - 1)\n        )\n\n    return ret\n"
+ ],
+ "how": "model"
+}

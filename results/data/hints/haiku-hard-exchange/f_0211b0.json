@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_0211b0(_0x5053a8148c):\n    _0xfc699e5b9f = len(_0x5053a8148c) // 2\n    _0x20a4316975 = (len(_0x5053a8148c) - 1) // 2\n    while _0xfc699e5b9f < len(_0x5053a8148c) and _0x20a4316975 >= 0:\n        if _0x5053a8148c[_0xfc699e5b9f] == 9:\n            _0x5053a8148c[_0xfc699e5b9f] = 0\n            _0x5053a8148c[_0x20a4316975] = 0\n            _0xfc699e5b9f += 1\n            _0x20a4316975 -= 1\n        else:\n            _0x5053a8148c[_0xfc699e5b9f] += 1\n            if _0x20a4316975 != _0xfc699e5b9f:\n                _0x5053a8148c[_0x20a4316975] = _0x5053a8148c[_0xfc699e5b9f]\n            return _0x5053a8148c\n    return [1] + (len(_0x5053a8148c) - 1) * [0] + [1]\n"
+ ],
+ "how": "model"
+}

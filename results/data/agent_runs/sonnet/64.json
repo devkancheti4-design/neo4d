@@ -1,0 +1,1 @@
+[[{"tool": "grep", "pattern": "\\blist\\b", "path": "qb"}, "qb/flatten.py:4: if isinstance(x, list):\nqb/next_permutation.py:7: next_perm = list(perm)\nqb/next_permutation.py:18: next_perm = list(perm)", ["qb/flatten.py", "qb/next_permutation.py"]], [{"tool": "write", "path": "answer.txt", "content": "next_permutation\n"}, "written", null], [{"tool": "done"}, "done", null]]

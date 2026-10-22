@@ -571,7 +571,7 @@ class Brain:
     def ranked(self, text, lo, hi):
         sk = skeleton(text)
         return sorted((p for p in self.plans[sk] if lo <= self.level[(sk, p)] <= hi),
-                      key=lambda p: (-self.level[(sk, p)], -self.good[(sk, p)], len(p)))
+                      key=lambda p: (-self.level[(sk, p)], -self.good[(sk, p)], len(p), p))   # ties: a fixed order
 
     def learn(self, task, trace, tried, shadow):
         sk = skeleton(task["text"])
@@ -693,7 +693,7 @@ def put_section(heading, lines):
     parts = p.read_text().rstrip("\n").split("\n## ") if p.exists() else ["# A small local model doing multi-step work"]
     body = "\n".join(lines).strip("\n")
     parts = [x for x in parts if not x.startswith(heading)] + [body[3:] if body.startswith("## ") else body]
-    p.write_text("\n## ".join(parts) + "\n")
+    p.write_text("\n\n## ".join(x.strip("\n") for x in parts) + "\n")
 
 
 RUNS = BUILD / "agent_runs"
@@ -746,7 +746,9 @@ def agent_score(runs, tasks, law):
            "Claude Haiku and Claude Sonnet, each run as subagents working through the same stream with the same tools, "
            f"one action per command, at most {MAX_STEPS} actions a task, one try. **neo4d + model**: in stream order, "
            "neo4d runs its trusted plans that need no model call; the model's own work counts for every other task, "
-           "and neo4d learns from it. Model actions are the large model's turns - each one a call.", "",
+           "and neo4d learns from it. Model actions are the large model's turns - each one a call. Plans of equal "
+           "strength are tried in a fixed order, so these numbers reproduce exactly (the phi4-mini run above was made "
+           "before that fix, with such ties in arbitrary order). The raw runs are in results/data/agent_runs/.", "",
            "| solver | accepted | second half | tasks the large model was needed for | large-model actions | "
            "second half: tasks needing the model |", "|---|---|---|---|---|---|"]
     for run in runs:

@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def flatten(arr):\n    for x in arr:\n        if isinstance(x, list):\n            for y in flatten(x):\n                yield y\n        else:\n            yield x\n"
+ ],
+ "how": "model"
+}

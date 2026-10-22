@@ -1,0 +1,1 @@
+[[{"tool": "grep", "pattern": "\\blist\\(", "path": "qb"}, "qb/next_permutation.py:7: next_perm = list(perm)\nqb/next_permutation.py:18: next_perm = list(perm)", ["qb/next_permutation.py"]], [{"tool": "write", "path": "answer.txt", "content": "next_permutation\n"}, "written", null], [{"tool": "done"}, "done", null]]

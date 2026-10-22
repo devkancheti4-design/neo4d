@@ -1,0 +1,1 @@
+[[{"tool": "grep", "pattern": "\\byield\\b", "path": "qb"}, "qb/flatten.py:6: yield y\nqb/flatten.py:8: yield x\nqb/kheapsort.py:9: yield heapq.heappushpop(heap, x)\nqb/kheapsort.py:12: yield heapq.heappop(heap)", ["qb/flatten.py", "qb/kheapsort.py"]], [{"tool": "write", "path": "answer.txt", "content": "2\n"}, "written", null], [{"tool": "done"}, "done", null]]

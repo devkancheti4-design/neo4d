@@ -1,0 +1,1 @@
+[[{"tool": "grep", "pattern": "\\bmin\\b", "path": "qb"}, "qb/levenshtein.py:10: return 1 + min(", ["qb/levenshtein.py"]], [{"tool": "write", "path": "answer.txt", "content": "levenshtein\n"}, "written", null], [{"tool": "done"}, "done", null]]

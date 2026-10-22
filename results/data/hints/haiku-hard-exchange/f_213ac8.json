@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_213ac8(_0xe5c4bddf8b, _0xf8252e6333):\n    from collections import Counter\n    _0x0fb02ab459 = Counter()\n    for _0x3bff55042f in range(len(_0xe5c4bddf8b)):\n        for _0xb5b62fe9fd in range(len(_0xf8252e6333)):\n            if _0xe5c4bddf8b[_0x3bff55042f] == _0xf8252e6333[_0xb5b62fe9fd]:\n                _0x0fb02ab459[_0x3bff55042f, _0xb5b62fe9fd] = _0x0fb02ab459[_0x3bff55042f - 1, _0xb5b62fe9fd - 1] + 1\n    return max(_0x0fb02ab459.values()) if _0x0fb02ab459 else 0\n"
+ ],
+ "how": "model"
+}

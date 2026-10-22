@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def sqrt(x, epsilon):\n    approx = x / 2\n    while abs(approx * approx - x) > epsilon:\n        approx = 0.5 * (approx + x / approx)\n    return approx\n"
+ ],
+ "how": "model"
+}

@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "import string\n\ndef f_aaa2bd(_0x0ab968af77, _0x673b865f10):\n    _0xbdf455c949 = ''\n    _0x3d5defb97e = string.digits + string.ascii_uppercase\n    while _0x0ab968af77 > 0:\n        _0x3bff55042f = _0x0ab968af77 % _0x673b865f10\n        _0x0ab968af77 = _0x0ab968af77 // _0x673b865f10\n        _0xbdf455c949 = _0x3d5defb97e[_0x3bff55042f] + _0xbdf455c949\n    return _0xbdf455c949\n"
+ ],
+ "how": "model"
+}

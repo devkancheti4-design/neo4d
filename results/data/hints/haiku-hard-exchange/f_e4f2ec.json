@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_e4f2ec(_0xee7bffbbe8):\n    if _0xee7bffbbe8:\n        _0xe780e972ca, *_0x7817ac7f18 = _0xee7bffbbe8\n        _0x1c2f84e6df = f_e4f2ec(_0x7817ac7f18)\n        return _0x1c2f84e6df + [[_0xe780e972ca] + _0x8bad24ba28 for _0x8bad24ba28 in _0x1c2f84e6df]\n    else:\n        return [[]]\n"
+ ],
+ "how": "model"
+}

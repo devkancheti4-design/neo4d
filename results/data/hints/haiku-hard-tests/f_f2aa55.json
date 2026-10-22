@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_f2aa55(_0xdd949943d9):\n    _0x6cb466eefa = {'+': 1, '-': 1, '*': 2, '/': 2}\n    _0xb6180ebeb2 = []\n    _0x834d2a0798 = []\n    for _0x1f3a491626 in _0xdd949943d9:\n        if isinstance(_0x1f3a491626, int):\n            _0xb6180ebeb2.append(_0x1f3a491626)\n        else:\n            while _0x834d2a0798 and _0x6cb466eefa[_0x1f3a491626] <= _0x6cb466eefa[_0x834d2a0798[-1]]:\n                _0xb6180ebeb2.append(_0x834d2a0798.pop())\n            _0x834d2a0798.append(_0x1f3a491626)\n    while _0x834d2a0798:\n        _0xb6180ebeb2.append(_0x834d2a0798.pop())\n    return _0xb6180ebeb2\n"
+ ],
+ "how": "model"
+}

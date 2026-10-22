@@ -1,0 +1,1 @@
+[[{"tool": "replace", "path": "qb/get_factors.py", "old": "def get_factors(n):", "new": "def get_factors(n, limit=None):"}, "replaced 2 occurrence(s)", null], [{"tool": "test"}, "31/31 test files pass\n", null], [{"tool": "done"}, "done", null]]

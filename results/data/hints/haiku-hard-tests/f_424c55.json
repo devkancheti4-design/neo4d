@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_424c55(_0xee7bffbbe8):\n    _0xa24732dabd = 0\n    _0x23ee2e9610 = 0\n    for _0x881ada2358 in _0xee7bffbbe8:\n        _0xa24732dabd = max(0, _0xa24732dabd + _0x881ada2358)\n        _0x23ee2e9610 = max(_0x23ee2e9610, _0xa24732dabd)\n    return _0x23ee2e9610\n"
+ ],
+ "how": "model"
+}

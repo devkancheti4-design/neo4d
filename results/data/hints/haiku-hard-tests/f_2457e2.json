@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_2457e2(_0x9516f5f31a, _0x673b865f10, _0xd55894c646):\n    if _0xd55894c646 == 0:\n        return [[]]\n    _0x23e5955eb1 = []\n    for _0x3bff55042f in range(_0x9516f5f31a, _0x673b865f10 + 1 - _0xd55894c646):\n        _0x23e5955eb1.extend(([_0x3bff55042f] + _0x7817ac7f18 for _0x7817ac7f18 in f_2457e2(_0x3bff55042f + 1, _0x673b865f10, _0xd55894c646 - 1)))\n    return _0x23e5955eb1\n"
+ ],
+ "how": "model"
+}

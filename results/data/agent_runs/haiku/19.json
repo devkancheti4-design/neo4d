@@ -1,0 +1,1 @@
+[[{"tool": "replace", "path": "qb/is_valid_parenthesization.py", "old": "parens", "new": "parens_value"}, "replaced 18 occurrence(s)", null], [{"tool": "test"}, "31/31 test files pass\n", null], [{"tool": "done"}, "done", null]]

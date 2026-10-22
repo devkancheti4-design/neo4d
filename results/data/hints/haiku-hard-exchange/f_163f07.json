@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_163f07(_0xee7bffbbe8, _0x881ada2358):\n    _0xcaf9a10c77 = 0\n    _0x7da67f0dd4 = len(_0xee7bffbbe8)\n    while _0xcaf9a10c77 < _0x7da67f0dd4:\n        _0xf1553cc642 = (_0xcaf9a10c77 + _0x7da67f0dd4) // 2\n        if _0x881ada2358 == _0xee7bffbbe8[_0xf1553cc642] and (_0xf1553cc642 == 0 or _0x881ada2358 != _0xee7bffbbe8[_0xf1553cc642 - 1]):\n            return _0xf1553cc642\n        elif _0x881ada2358 <= _0xee7bffbbe8[_0xf1553cc642]:\n            _0x7da67f0dd4 = _0xf1553cc642\n        else:\n            _0xcaf9a10c77 = _0xf1553cc642 + 1\n    return -1\n"
+ ],
+ "how": "model"
+}

@@ -1,0 +1,1 @@
+[[{"tool": "replace", "path": "qb/longest_common_subsequence.py", "old": "def longest_common_subsequence(a, b):", "new": "def longest_common_subsequence(a, b, verbose=False):"}, "replaced 1 occurrence(s)", null], [{"tool": "test"}, "31/31 test files pass\n", null], [{"tool": "done"}, "done", null]]

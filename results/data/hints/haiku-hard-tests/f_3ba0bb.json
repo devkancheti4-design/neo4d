@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_3ba0bb(_0x882e38bd50, _0xc65b291477):\n    if _0x882e38bd50 == '' or _0xc65b291477 == '':\n        return len(_0x882e38bd50) or len(_0xc65b291477)\n    elif _0x882e38bd50[0] == _0xc65b291477[0]:\n        return f_3ba0bb(_0x882e38bd50[1:], _0xc65b291477[1:])\n    else:\n        return 1 + min(f_3ba0bb(_0x882e38bd50, _0xc65b291477[1:]), f_3ba0bb(_0x882e38bd50[1:], _0xc65b291477[1:]), f_3ba0bb(_0x882e38bd50[1:], _0xc65b291477))\n"
+ ],
+ "how": "model"
+}

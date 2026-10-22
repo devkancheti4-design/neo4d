@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_826eca(_0x57404e4a4c):\n    _0x384bdeb7b4 = [[1]]\n    for _0xcf9e4bb5e7 in range(1, _0x57404e4a4c):\n        _0x87d0bf73cd = []\n        for _0x6d5e086d90 in range(0, _0xcf9e4bb5e7 + 1):\n            _0x0e79dc13c6 = _0x384bdeb7b4[_0xcf9e4bb5e7 - 1][_0x6d5e086d90 - 1] if _0x6d5e086d90 > 0 else 0\n            _0x976b9837af = _0x384bdeb7b4[_0xcf9e4bb5e7 - 1][_0x6d5e086d90] if _0x6d5e086d90 < _0xcf9e4bb5e7 else 0\n            _0x87d0bf73cd.append(_0x0e79dc13c6 + _0x976b9837af)\n        _0x384bdeb7b4.append(_0x87d0bf73cd)\n    return _0x384bdeb7b4\n"
+ ],
+ "how": "model"
+}

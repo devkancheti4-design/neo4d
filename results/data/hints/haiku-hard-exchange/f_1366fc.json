@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_1366fc(_0xdd949943d9):\n\n    def op(_0x9d4b5fb0f2, _0x9516f5f31a, _0x673b865f10):\n        return {'+': lambda _0x9516f5f31a, _0x673b865f10: _0x9516f5f31a + _0x673b865f10, '-': lambda _0x9516f5f31a, _0x673b865f10: _0x9516f5f31a - _0x673b865f10, '*': lambda _0x9516f5f31a, _0x673b865f10: _0x9516f5f31a * _0x673b865f10, '/': lambda _0x9516f5f31a, _0x673b865f10: _0x9516f5f31a / _0x673b865f10}[_0x9d4b5fb0f2](_0x9516f5f31a, _0x673b865f10)\n    _0xb6f8effb5a = []\n    for _0x1f3a491626 in _0xdd949943d9:\n        if isinstance(_0x1f3a491626, float):\n            _0xb6f8effb5a.append(_0x1f3a491626)\n        else:\n            _0x9516f5f31a = _0xb6f8effb5a.pop()\n            _0x673b865f10 = _0xb6f8effb5a.pop()\n            _0xb6f8effb5a.append(op(_0x1f3a491626, _0x673b865f10, _0x9516f5f31a))\n    return _0xb6f8effb5a[-1]\n"
+ ],
+ "how": "model"
+}

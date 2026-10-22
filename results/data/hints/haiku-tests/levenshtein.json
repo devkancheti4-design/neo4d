@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def levenshtein(source, target):\n    if source == '' or target == '':\n        return len(source) or len(target)\n\n    elif source[0] == target[0]:\n        return levenshtein(source[1:], target[1:])\n\n    else:\n        return 1 + min(\n            levenshtein(source,     target[1:]),\n            levenshtein(source[1:], target[1:]),\n            levenshtein(source[1:], target)\n        )\n\n\"\"\"\nLevenshtein Distance\n\n\nCalculates the Levenshtein distance between two strings.  The Levenshtein distance is defined as the minimum amount of single-character edits (either removing a character, adding a character, or changing a character) necessary to transform a source string into a target string.\n\nInput:\n    source: The string you begin with.\n    target: The string to transform into.\n\nOutput:\n    The Levenshtein distance between the source and target.\n\nExample:\n    electron can be transformed into neutron by removing the e, turning the l into n, and turning the c into u.\n    >>> levenshtein(electron, neutron)\n    3\n\"\"\"\n"
+ ],
+ "how": "model"
+}

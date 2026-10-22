@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "\ndef shunting_yard(tokens):\n    precedence = {\n        '+': 1,\n        '-': 1,\n        '*': 2,\n        '/': 2\n    }\n\n    rpntokens = []\n    opstack = []\n    for token in tokens:\n        if isinstance(token, int):\n            rpntokens.append(token)\n        else:\n            while opstack and precedence[token] <= precedence[opstack[-1]]:\n                rpntokens.append(opstack.pop())\n            opstack.append(token)\n\n    while opstack:\n        rpntokens.append(opstack.pop())\n\n    return rpntokens\n\n\n\"\"\"\nInfix to RPN Conversion\nshunting-yard\n\n\nUses Dijkstra's shunting-yard algorithm to transform infix notation into equivalent Reverse Polish Notation.\n\nInput:\n    tokens: A list of tokens in infix notation\n\nPrecondition:\n    all(isinstance(token, int) or token in '+-*/' for token in tokens)\n\nOutput:\n    The input tokens reordered into Reverse Polish Notation\n\nExamples:\n    >>> shunting_yard([10, '-', 5, '-', 2])\n    [10, 5, '-', 2, '-']\n    >>> shunting_yard([34, '-', 12, '/', 5])\n    [34, 12, 5, '/' ,'-']\n    >>> shunting_yard([4, '+', 9, '*', 9, '-', 10, '+', 13])\n    [4, 9, 9, '*', '+', 10, '-', 13, '+']\n\"\"\"\n"
+ ],
+ "how": "model"
+}

@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def kheapsort(arr, k):\n    import heapq\n\n    heap = arr[:k]\n    heapq.heapify(heap)\n\n    for x in arr[k:]:\n        yield heapq.heappushpop(heap, x)\n\n    while heap:\n        yield heapq.heappop(heap)\n"
+ ],
+ "how": "model"
+}

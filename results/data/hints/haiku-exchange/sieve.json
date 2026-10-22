@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def sieve(max):\n    primes = []\n    for n in range(2, max + 1):\n        if all(n % p > 0 for p in primes):\n            primes.append(n)\n    return primes\n"
+ ],
+ "how": "model"
+}

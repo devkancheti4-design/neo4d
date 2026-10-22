@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_a1ae73(_0x57404e4a4c):\n    _0xd2f25c658d = 0\n    while _0x57404e4a4c:\n        _0x57404e4a4c &= _0x57404e4a4c - 1\n        _0xd2f25c658d += 1\n    return _0xd2f25c658d\n"
+ ],
+ "how": "model"
+}

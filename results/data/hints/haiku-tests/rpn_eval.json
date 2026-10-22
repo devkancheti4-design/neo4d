@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "\ndef rpn_eval(tokens):\n    def op(symbol, a, b):\n        return {\n            '+': lambda a, b: a + b,\n            '-': lambda a, b: a - b,\n            '*': lambda a, b: a * b,\n            '/': lambda a, b: a / b\n        }[symbol](a, b)\n\n    stack = []\n\n    for token in tokens:\n        if isinstance(token, float):\n            stack.append(token)\n        else:\n            b = stack.pop()\n            a = stack.pop()\n            stack.append(\n                op(token, a, b)\n            )\n\n    return stack.pop()\n\n\n\n\"\"\"\nReverse Polish Notation\n\nFour-function calculator with input given in Reverse Polish Notation (RPN).\n\nInput:\n    A list of values and operators encoded as floats and strings\n\nPrecondition:\n    all(\n        isinstance(token, float) or token in ('+', '-', '*', '/') for token in tokens\n    )\n\nExample:\n    >>> rpn_eval([3.0, 5.0, '+', 2.0, '/'])\n    4.0\n\"\"\"\n"
+ ],
+ "how": "model"
+}

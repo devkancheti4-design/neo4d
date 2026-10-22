@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_bffd17(_0xee7bffbbe8):\n    if not _0xee7bffbbe8:\n        return []\n    _0x58f51ae8d2 = _0xee7bffbbe8[0]\n    _0xea98cfa27e = f_bffd17([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8 if _0x881ada2358 < _0x58f51ae8d2])\n    _0xf8833d98ed = [_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8 if _0x881ada2358 == _0x58f51ae8d2]\n    _0x9c1d2e4f10 = f_bffd17([_0x881ada2358 for _0x881ada2358 in _0xee7bffbbe8 if _0x881ada2358 > _0x58f51ae8d2])\n    return _0xea98cfa27e + _0xf8833d98ed + _0x9c1d2e4f10\n"
+ ],
+ "how": "model"
+}

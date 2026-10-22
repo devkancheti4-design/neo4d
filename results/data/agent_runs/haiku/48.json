@@ -1,0 +1,1 @@
+[[{"tool": "replace", "path": "qb/sieve.py", "old": "def sieve(max):", "new": "def sieve(max, trace=False):"}, "replaced 4 occurrence(s)", null], [{"tool": "test"}, "31/31 test files pass\n", null], [{"tool": "done"}, "done", null]]

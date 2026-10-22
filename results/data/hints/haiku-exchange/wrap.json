@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def wrap(text, cols):\n    lines = []\n    while len(text) > cols:\n        end = text.rfind(' ', 0, cols + 1)\n        if end <= 0:\n            end = cols\n        line, text = text[:end], text[end:]\n        lines.append(line)\n\n    lines.append(text)\n    return lines\n"
+ ],
+ "how": "model"
+}

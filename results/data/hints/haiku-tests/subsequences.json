@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def subsequences(a, b, k):\n    if k == 0:\n        return [[]]\n\n    ret = []\n    for i in range(a, b + 1 - k):\n        ret.extend(\n            [i] + rest for rest in subsequences(i + 1, b, k - 1)\n        )\n\n    return ret\n\n\n\"\"\"\nSubsequences\n\n\nInput:\n    a: An int\n    b: An int\n    k: A positive int\n\nOutput:\n    A list of all length-k ascending sequences of ints in range(a, b)\n\nExample:\n    >>> subsequences(a=1, b=5, k=3)\n    [[1, 2, 3], [1, 2, 4], [1, 3, 4], [2, 3, 4]]\n\"\"\"\n"
+ ],
+ "how": "model"
+}

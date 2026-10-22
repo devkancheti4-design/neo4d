@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_e6b7df(_0xee7bffbbe8, _0xd55894c646):\n    _0x08f74a0bfb = [0] * _0xd55894c646\n    for _0x881ada2358 in _0xee7bffbbe8:\n        _0x08f74a0bfb[_0x881ada2358] += 1\n    _0xdc4ccdf819 = []\n    for _0x3bff55042f, _0xd2f25c658d in enumerate(_0x08f74a0bfb):\n        _0xdc4ccdf819.extend([_0x3bff55042f] * _0xd2f25c658d)\n    return _0xdc4ccdf819\n"
+ ],
+ "how": "model"
+}

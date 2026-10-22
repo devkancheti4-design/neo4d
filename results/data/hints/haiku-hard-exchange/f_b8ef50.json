@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_b8ef50(_0x9516f5f31a, _0x673b865f10):\n    if not _0x9516f5f31a or not _0x673b865f10:\n        return ''\n    elif _0x9516f5f31a[0] == _0x673b865f10[0]:\n        return _0x9516f5f31a[0] + f_b8ef50(_0x9516f5f31a[1:], _0x673b865f10[1:])\n    else:\n        return max(f_b8ef50(_0x9516f5f31a, _0x673b865f10[1:]), f_b8ef50(_0x9516f5f31a[1:], _0x673b865f10), key=len)\n"
+ ],
+ "how": "model"
+}

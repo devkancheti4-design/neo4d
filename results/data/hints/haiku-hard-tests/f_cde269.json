@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_cde269(_0xe8fcce12f4, _0xc29195d570):\n    if _0xc29195d570 == 0:\n        return 1\n    if _0xc29195d570 < 0 or not _0xe8fcce12f4:\n        return 0\n    _0xe780e972ca, *_0x7817ac7f18 = _0xe8fcce12f4\n    return f_cde269(_0xe8fcce12f4, _0xc29195d570 - _0xe780e972ca) + f_cde269(_0x7817ac7f18, _0xc29195d570)\n"
+ ],
+ "how": "model"
+}

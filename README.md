@@ -58,6 +58,24 @@ Closed forms over the affine group of GF(2)^4, each checked by brute force or si
 | formal verification (`kit-proof`) | route4d5 on **all 68,719,476,736 reduced words: 0 mismatches** against an independent reference, and **proved by CBMC on all 2^64 words**; route4d on all 1,048,576 | no - every kernel now checked on its whole input space |
 | federation (`kit-federation`) | 5 span-aware anchors transfer a whole table between affine numberings, 0 wrong; **not zero-knowledge** | no integer law can supply that |
 
+## A brain for models - local models, Claude Haiku, Claude Sonnet (`results/LOCAL_*.md`)
+
+neo4d as the core that decides and remembers; a model reads and writes. Every model call is counted; the raw runs of
+Haiku and Sonnet (run as subagents through the same tools) are in `results/data/`.
+
+| test | without neo4d | with neo4d |
+|---|---|---|
+| bug fixing, phi4-mini, 176 tasks (`neo4d local-model`) | 30.7% alone, 42.0% with 3 tries | **62.5%**, 251 calls vs 407 |
+| multi-step agent work, phi4-mini, 85 tasks (`neo4d local-agent`) | 25.9% alone, 40.0% with 3 tries | **47.1%** (second half 55.8%), 1,225 calls vs 1,406 |
+| the same 85 tasks, Claude Sonnet | 85/85, 418 calls | **85/85, 285 calls** - Sonnet needed on 58 tasks, not 85 |
+| the same 85 tasks, Claude Haiku | 84/85, 401 calls | **84/85, 226 calls** - Haiku needed on 51 tasks, not 85 |
+| real bugs, round after round until it answers, phi4-mini (`neo4d local-hints --loop`) | 22/31 with test feedback, 154 calls | **25/31, 120 calls** - neo4d mutates each attempt |
+| hard bugs (two faults, obfuscated), neo4d searches deep and Haiku only filters | blind search 14/29, 5,815 test runs | **17/29, 2,316 test runs**, 37 Haiku decisions |
+
+What did not help: neo4d's evidence handed to phi4-mini as a paragraph (16/31 against 20 with plain retries - it
+dilutes a small model's attention), and anything on bugs Haiku already solves (31/31 and 29/29 alone). neo4d adds
+power by doing the work - remembering what worked, searching around a model's attempt, testing - not by advising.
+
 ## The laws - authored externally, judged here
 
 | law | decides | judged |

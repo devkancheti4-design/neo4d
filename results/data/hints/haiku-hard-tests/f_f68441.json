@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_f68441(_0x3278a06005, _0x31752b999f=1, _0xb94b38def4=3):\n    _0x3caefd1a8f = []\n    if _0x3278a06005 > 0:\n        _0xf927178cda = ({1, 2, 3} - {_0x31752b999f} - {_0xb94b38def4}).pop()\n        _0x3caefd1a8f.extend(f_f68441(_0x3278a06005 - 1, _0x31752b999f, _0xf927178cda))\n        _0x3caefd1a8f.append((_0x31752b999f, _0xb94b38def4))\n        _0x3caefd1a8f.extend(f_f68441(_0x3278a06005 - 1, _0xf927178cda, _0xb94b38def4))\n    return _0x3caefd1a8f\n"
+ ],
+ "how": "model"
+}

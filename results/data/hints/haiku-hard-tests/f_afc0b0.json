@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_afc0b0(_0xee7bffbbe8):\n    _0xd8709239da = {}\n    _0xe4b4eb92d5 = 0\n    for _0x3bff55042f, _0xb37f206a76 in enumerate(_0xee7bffbbe8):\n        _0x551e6845e8 = [_0xb5b62fe9fd for _0xb5b62fe9fd in range(1, _0xe4b4eb92d5 + 1) if _0xee7bffbbe8[_0xd8709239da[_0xb5b62fe9fd]] < _0xb37f206a76]\n        _0x8f927b60de = max(_0x551e6845e8) if _0x551e6845e8 else 0\n        if _0x8f927b60de == _0xe4b4eb92d5 or _0xb37f206a76 < _0xee7bffbbe8[_0xd8709239da[_0x8f927b60de + 1]]:\n            _0xd8709239da[_0x8f927b60de + 1] = _0x3bff55042f\n            _0xe4b4eb92d5 = max(_0xe4b4eb92d5, _0x8f927b60de + 1)\n    return _0xe4b4eb92d5\n"
+ ],
+ "how": "model"
+}

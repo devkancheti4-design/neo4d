@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_a2e1c4(_0x6115ccf67b, _0x094c9d5bce):\n    from collections import defaultdict\n    _0xb8c36e4a42 = defaultdict(int)\n    for _0x3bff55042f in range(1, len(_0x094c9d5bce) + 1):\n        _0xa4f3db0b73, _0xb18c2885fb = _0x094c9d5bce[_0x3bff55042f - 1]\n        for _0xb5b62fe9fd in range(1, int(_0x6115ccf67b) + 1):\n            _0xb8c36e4a42[_0x3bff55042f, _0xb5b62fe9fd] = _0xb8c36e4a42[_0x3bff55042f - 1, _0xb5b62fe9fd]\n            if _0xa4f3db0b73 <= _0xb5b62fe9fd:\n                _0xb8c36e4a42[_0x3bff55042f, _0xb5b62fe9fd] = max(_0xb8c36e4a42[_0x3bff55042f, _0xb5b62fe9fd], _0xb18c2885fb + _0xb8c36e4a42[_0x3bff55042f - 1, _0xb5b62fe9fd - _0xa4f3db0b73])\n    return _0xb8c36e4a42[len(_0x094c9d5bce), _0x6115ccf67b]\n"
+ ],
+ "how": "model"
+}

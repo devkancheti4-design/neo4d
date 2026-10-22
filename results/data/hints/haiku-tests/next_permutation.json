@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def next_permutation(perm):\n    for i in range(len(perm) - 2, -1, -1):\n        if perm[i] < perm[i + 1]:\n            for j in range(len(perm) - 1, i, -1):\n                if perm[j] > perm[i]:\n                    next_perm = list(perm)\n                    next_perm[i], next_perm[j] = perm[j], perm[i]\n                    next_perm[i + 1:] = reversed(next_perm[i + 1:])\n                    return next_perm\n\n\n\n\"\"\"\nNext Permutation\nnext-perm\n\n\nInput:\n    perm: A list of unique ints\n\nPrecondition:\n    perm is not sorted in reverse order\n\nOutput:\n    The lexicographically next permutation of the elements of perm\n\nExample:\n    >>> next_permutation([3, 2, 4, 1])\n    [3, 4, 1, 2]\n\"\"\"\n"
+ ],
+ "how": "model"
+}

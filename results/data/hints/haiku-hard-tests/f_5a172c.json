@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_5a172c(max):\n    _0x621f8f010a = []\n    for _0x57404e4a4c in range(2, max + 1):\n        if all((_0x57404e4a4c % _0x619ca229b0 != 0 for _0x619ca229b0 in _0x621f8f010a)):\n            _0x621f8f010a.append(_0x57404e4a4c)\n    return _0x621f8f010a\n"
+ ],
+ "how": "model"
+}

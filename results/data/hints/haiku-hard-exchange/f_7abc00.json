@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_7abc00(_0xee7bffbbe8):\n\n    def merge(_0xd663fb6f18, _0x76b418869f):\n        _0xbdf455c949 = []\n        _0x3bff55042f = 0\n        _0xb5b62fe9fd = 0\n        while _0x3bff55042f < len(_0xd663fb6f18) and _0xb5b62fe9fd < len(_0x76b418869f):\n            if _0xd663fb6f18[_0x3bff55042f] <= _0x76b418869f[_0xb5b62fe9fd]:\n                _0xbdf455c949.append(_0xd663fb6f18[_0x3bff55042f])\n                _0x3bff55042f += 1\n            else:\n                _0xbdf455c949.append(_0x76b418869f[_0xb5b62fe9fd])\n                _0xb5b62fe9fd += 1\n        _0xbdf455c949.extend(_0xd663fb6f18[_0x3bff55042f:])\n        _0xbdf455c949.extend(_0x76b418869f[_0xb5b62fe9fd:])\n        return _0xbdf455c949\n    if len(_0xee7bffbbe8) <= 1:\n        return _0xee7bffbbe8\n    else:\n        _0xde9294a993 = len(_0xee7bffbbe8) // 2\n        _0xd663fb6f18 = f_7abc00(_0xee7bffbbe8[:_0xde9294a993])\n        _0x76b418869f = f_7abc00(_0xee7bffbbe8[_0xde9294a993:])\n        return merge(_0xd663fb6f18, _0x76b418869f)\n"
+ ],
+ "how": "model"
+}

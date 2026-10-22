@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def gcd(a, b):\n    if b == 0:\n        return a\n    else:\n        return gcd(b, a % b)\n"
+ ],
+ "how": "model"
+}

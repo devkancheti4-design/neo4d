@@ -1,0 +1,6 @@
+{
+ "subs": [
+  "def f_f0a289(_0xe82f651d4e, _0x139ebd7916):\n    _0xc961983e6e = []\n    while len(_0xe82f651d4e) > _0x139ebd7916:\n        _0xb94b38def4 = _0xe82f651d4e.rfind(' ', 0, _0x139ebd7916 + 1)\n        if _0xb94b38def4 <= 0:\n            _0xb94b38def4 = _0x139ebd7916\n        _0xd56c3a0d28, _0xe82f651d4e = (_0xe82f651d4e[:_0xb94b38def4], _0xe82f651d4e[_0xb94b38def4:])\n        _0xc961983e6e.append(_0xd56c3a0d28)\n    _0xc961983e6e.append(_0xe82f651d4e)\n    return _0xc961983e6e\n"
+ ],
+ "how": "model"
+}
