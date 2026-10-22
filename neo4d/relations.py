@@ -151,7 +151,18 @@ def _pure(diff, path_ok, reverse):
 
 # ----------------------------------------------------------------------------------------- edits and relations
 
-def toks(line):
+TOK_JS = re.compile(r"[A-Za-z_$][\w$]*|\d+(?:\.\d+)?n?|===|!==|==|!=|<=|>=|=>|&&|\|\||\?\?|\?\.|<<|>>|\+\+|--|\+=|-=|\*=|/=|\.\.\.|\S")
+
+
+def toks_js(line):
+    """JavaScript tokens: `===` `!==` `=>` `??` `?.` whole, `$` part of a name (renamed `_S_` so a name never looks
+    like a pattern placeholder), then the shared canonical forms (`&&` AND, `!` NOT, `true` TRUE, `null` NULL)."""
+    return [canon(t.replace("$", "_S_")) for t in TOK_JS.findall(line)]
+
+
+def toks(line, lang="py"):
+    if lang == "js":
+        return toks_js(line)
     return [canon(t) for t in RF.TOK.findall(line)]
 
 

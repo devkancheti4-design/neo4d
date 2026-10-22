@@ -38,6 +38,7 @@ from neo4d import relations as R
 from neo4d import relate_live as RL
 
 ROR = ["<", "<=", ">", ">=", "==", "!="]
+ROR_JS = ["<", "<=", ">", ">=", "==", "!=", "===", "!=="]     # JavaScript's strict equality joins the family
 NUMTAIL = re.compile(r"^([xX][0-9a-fA-F]+|[bB][01]+|[eE]\d*|[oO][0-7]+)[lLuU]*$")   # the rest of 0x1F, 0b10, 1e5
 AOR = ["+", "-", "*", "/", "%"]
 ASR = ["+=", "-=", "*=", "/="]
@@ -144,11 +145,12 @@ def mutants(a, lang="py", hard=False):
         m = tuple(m)
         if m != tuple(a):
             out.setdefault(m, op)
+    ror = ROR_JS if lang == "js" else ROR
     for i, t in enumerate(a):
         if i in skip:
             continue
-        if t in ROR and _binary(a, i):
-            for u in ROR:
+        if t in ror and _binary(a, i):
+            for u in ror:
                 put(a[:i] + [u] + a[i + 1:], "ROR")
         elif t in AOR and _binary(a, i) and a[i - 1] != t and a[i + 1] != t:
             for u in AOR:
@@ -185,7 +187,7 @@ def mutants(a, lang="py", hard=False):
         if a in (["break", ";"], ["continue", ";"]):
             put(["continue" if a[0] == "break" else "break", ";"], "BRK")
         if a and a[0] == "return" and len(a) > 2 and a[-1] == ";":
-            val = ["NULL"] if lang == "java" else ["0"]
+            val = ["NULL"] if lang in ("java", "js") else ["0"]
             if a[1:-1] != val:
                 put(["return"] + val + [";"], "RET")
     if hard:
@@ -252,7 +254,7 @@ class Domain:
         for item in raw:
             net, l, scope = item[:3]
             lang = item[3] if len(item) > 3 else "py"
-            a0 = R.toks(l)
+            a0 = R.toks(l, lang)
             if not a0:
                 continue
             a = ["^"] + a0                                 # the start of the line, so an edit there has an anchor
