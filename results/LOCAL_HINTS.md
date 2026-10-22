@@ -46,3 +46,25 @@ On the 29 hard bugs (two faults each, obfuscated, renamed). neo4d generates and 
 |---|---|---|---|---|---|
 | neo4d deep search, blind (keeps the 3 that pass most tests, each level) | **14/29** | 13 | 1 | 0 | 5,815 |
 | **neo4d deep search + Claude Haiku as the filter** | **17/29** | 16 | 1 | 37 | 2,316 |
+
+## Clarity for the model's attention
+
+The same bug shown three ways: **plain**; with **neo4d's evidence as a paragraph** (what its mutations found); and with **neo4d's marks** - no paragraph, only the comment `# <-- neo4d: changing this line changes the failing tests` on the one or two lines its mutations point to, so the model's attention goes there.
+
+Example (the lines marked for `bitcount`): 5, 4.
+
+### phi4-mini
+
+| shown | fixed, one try | fixed, up to 3 tries | model calls |
+|---|---|---|---|
+| plain | 11/31 | 20/31 | 97 |
+| neo4d's evidence as a paragraph | 12/31 | 16/31 | 98 |
+| **neo4d's marks on the suspect lines** | 15/31 | 18/31 | 93 |
+
+### gemma3:4b
+
+| shown | fixed, one try | fixed, up to 3 tries | model calls |
+|---|---|---|---|
+| plain | 15/31 | 15/31 | 94 |
+| neo4d's evidence as a paragraph | 11/31 | 12/31 | 102 |
+| **neo4d's marks on the suspect lines** | 13/31 | 14/31 | 97 |
