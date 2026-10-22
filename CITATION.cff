@@ -5,7 +5,7 @@ authors:
   - family-names: "LASTNAME"
     given-names: "Firstname"
 repository-code: "https://github.com/devkancheti4-design/neo4d"
-license: AGPL-3.0-only
+license: AGPL-3.0-or-later
 preferred-citation:
   type: article
   title: "Guess Close, Search Exact: A Formally Verified, Model-Free Memory and Mutation Engine for Language-Model Agents"

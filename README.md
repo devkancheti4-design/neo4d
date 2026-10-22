@@ -76,6 +76,8 @@ What did not help: neo4d's evidence handed to phi4-mini as a paragraph (16/31 ag
 dilutes a small model's attention), and anything on bugs Haiku already solves (31/31 and 29/29 alone). neo4d adds
 power by doing the work - remembering what worked, searching around a model's attempt, testing - not by advising.
 
+**On SWE-bench:** `neo4d/swe_agent.py` runs the same model with and without neo4d on SWE-bench Lite or Verified, scores both with the official harness and packages the run for the leaderboard - every step in [docs/SWEBENCH.md](docs/SWEBENCH.md).
+
 ## The laws - authored externally, judged here
 
 | law | decides | judged |
