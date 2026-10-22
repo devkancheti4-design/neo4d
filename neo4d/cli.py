@@ -34,6 +34,9 @@
     neo4d proof-closed        can it replace a model in a closed domain? exact answers line by line -> results/PROOF_CLOSED.md
     neo4d local-model         a local model (ollama) with neo4d as its brain [--model phi4-mini] [--compare answers.json]
                               -> results/LOCAL_MODEL.md, results/LOCAL_MODEL_VS_CLAUDE.md
+    neo4d local-agent         a local model doing multi-step work like Claude, neo4d as its brain [--model phi4-mini]
+                              [--claude-score answers.json] [--agent-score sonnet,haiku] -> results/LOCAL_AGENT.md
+    neo4d local-hints         bugs a small model never solved: neo4d mutates, the model gets the evidence -> results/LOCAL_HINTS.md
     neo4d novelty             does novelty die? new-pattern rate on bugs, click and the mutation domain -> results/NOVELTY.md
     neo4d prompts             regenerate the swarm-law prompts
 
@@ -92,14 +95,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty", "relate-v2", "kit-topology", "repeats", "proof-grows", "proof-hard", "proof-js", "proof-closed", "local-model"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty", "relate-v2", "kit-topology", "repeats", "proof-grows", "proof-hard", "proof-js", "proof-closed", "local-model", "local-agent", "local-hints"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard", "relate-v2": "relate_v2_check", "kit-topology": "kit_topology", "repeats": "repeats", "proof-grows": "proof_grows", "proof-hard": "proof_hard", "proof-js": "proof_js", "proof-closed": "proof_closed", "local-model": "local_model"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard", "relate-v2": "relate_v2_check", "kit-topology": "kit_topology", "repeats": "repeats", "proof-grows": "proof_grows", "proof-hard": "proof_hard", "proof-js": "proof_js", "proof-closed": "proof_closed", "local-model": "local_model", "local-agent": "local_agent", "local-hints": "local_hints"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest

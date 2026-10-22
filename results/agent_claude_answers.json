@@ -1,0 +1,440 @@
+{
+"42": [
+{
+"tool": "replace",
+"path": "qb/pascal.py",
+"old": "def pascal(n):",
+"new": "def pascal(n, limit=None):"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"43": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "5"
+},
+{
+"tool": "done"
+}
+],
+"44": [
+{
+"tool": "replace",
+"path": "qb/hanoi.py",
+"old": "hanoi(",
+"new": "run_hanoi("
+},
+{
+"tool": "replace",
+"path": "tests/test_hanoi.py",
+"old": "import hanoi",
+"new": "import run_hanoi"
+},
+{
+"tool": "replace",
+"path": "tests/test_hanoi.py",
+"old": "hanoi(",
+"new": "run_hanoi("
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"45": [
+{
+"tool": "replace",
+"path": "qb/levenshtein.py",
+"old": "levenshtein(",
+"new": "run_levenshtein("
+},
+{
+"tool": "replace",
+"path": "tests/test_levenshtein.py",
+"old": "import levenshtein",
+"new": "import run_levenshtein"
+},
+{
+"tool": "replace",
+"path": "tests/test_levenshtein.py",
+"old": "levenshtein(",
+"new": "run_levenshtein("
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"47": [
+{
+"tool": "replace",
+"path": "qb/is_valid_parenthesization.py",
+"old": "depth += 0",
+"new": "depth += 1"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"48": [
+{
+"tool": "replace",
+"path": "qb/sieve.py",
+"old": "def sieve(max):",
+"new": "def sieve(max, trace=False):"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"49": [
+{
+"tool": "replace",
+"path": "qb/quicksort.py",
+"old": "arr",
+"new": "arr_value"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"50": [
+{
+"tool": "replace",
+"path": "qb/sqrt.py",
+"old": "== epsilon",
+"new": "> epsilon"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"51": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "6"
+},
+{
+"tool": "done"
+}
+],
+"57": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "get_factors\nknapsack\nlcs_length\nlis\nnext_permutation\npascal\nsieve\nsubsequences"
+},
+{
+"tool": "done"
+}
+],
+"59": [
+{
+"tool": "replace",
+"path": "qb/rpn_eval.py",
+"old": "(tokens)",
+"new": "(input_tokens)"
+},
+{
+"tool": "replace",
+"path": "qb/rpn_eval.py",
+"old": "in tokens:",
+"new": "in input_tokens:"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"61": [
+{
+"tool": "replace",
+"path": "qb/sieve.py",
+"old": "(max)",
+"new": "(max_value)"
+},
+{
+"tool": "replace",
+"path": "qb/sieve.py",
+"old": "max + 1",
+"new": "max_value + 1"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"62": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "25"
+},
+{
+"tool": "done"
+}
+],
+"63": [
+{
+"tool": "replace",
+"path": "qb/lcs_length.py",
+"old": "dp[i - 1, j - 1] + 0",
+"new": "dp[i - 1, j - 1] + 1"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"64": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "next_permutation"
+},
+{
+"tool": "done"
+}
+],
+"65": [
+{
+"tool": "replace",
+"path": "qb/get_factors.py",
+"old": "def get_factors(n):",
+"new": "def get_factors(n, limit=None):"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"67": [
+{
+"tool": "replace",
+"path": "qb/possible_change.py",
+"old": "possible_change(",
+"new": "compute_possible_change("
+},
+{
+"tool": "replace",
+"path": "tests/test_possible_change.py",
+"old": "import possible_change",
+"new": "import compute_possible_change"
+},
+{
+"tool": "replace",
+"path": "tests/test_possible_change.py",
+"old": "possible_change(",
+"new": "compute_possible_change("
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"69": [
+{
+"tool": "replace",
+"path": "qb/knapsack.py",
+"old": "j % weight",
+"new": "j - weight"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"71": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "9"
+},
+{
+"tool": "done"
+}
+],
+"75": [
+{
+"tool": "replace",
+"path": "qb/max_sublist_sum.py",
+"old": "max_sublist_sum(",
+"new": "run_max_sublist_sum("
+},
+{
+"tool": "replace",
+"path": "tests/test_max_sublist_sum.py",
+"old": "import max_sublist_sum",
+"new": "import run_max_sublist_sum"
+},
+{
+"tool": "replace",
+"path": "tests/test_max_sublist_sum.py",
+"old": "max_sublist_sum(",
+"new": "run_max_sublist_sum("
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"76": [
+{
+"tool": "replace",
+"path": "qb/bitcount.py",
+"old": "def bitcount(n):",
+"new": "def bitcount(n, strict=True):"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"77": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "4"
+},
+{
+"tool": "done"
+}
+],
+"78": [
+{
+"tool": "replace",
+"path": "qb/mergesort.py",
+"old": "arr",
+"new": "arr_value"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"79": [
+{
+"tool": "replace",
+"path": "qb/longest_common_subsequence.py",
+"old": "def longest_common_subsequence(a, b):",
+"new": "def longest_common_subsequence(a, b, verbose=False):"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"80": [
+{
+"tool": "write",
+"path": "answer.txt",
+"content": "levenshtein"
+},
+{
+"tool": "done"
+}
+],
+"81": [
+{
+"tool": "replace",
+"path": "qb/subsequences.py",
+"old": "b / 1 - k",
+"new": "b + 1 - k"
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"83": [
+{
+"tool": "replace",
+"path": "qb/subsequences.py",
+"old": "(a, b, k)",
+"new": "(a_value, b, k)"
+},
+{
+"tool": "replace",
+"path": "qb/subsequences.py",
+"old": "range(a, ",
+"new": "range(a_value, "
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+],
+"84": [
+{
+"tool": "replace",
+"path": "qb/quicksort.py",
+"old": "quicksort(",
+"new": "compute_quicksort("
+},
+{
+"tool": "replace",
+"path": "tests/test_quicksort.py",
+"old": "import quicksort",
+"new": "import compute_quicksort"
+},
+{
+"tool": "replace",
+"path": "tests/test_quicksort.py",
+"old": "quicksort(",
+"new": "compute_quicksort("
+},
+{
+"tool": "test"
+},
+{
+"tool": "done"
+}
+]
+}
