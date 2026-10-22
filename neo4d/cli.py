@@ -29,6 +29,7 @@
     neo4d kit-topology        does it absorb a domain's topology? the rewrite graph learned vs the true one -> results/KIT_TOPOLOGY.md
     neo4d repeats             how well repeats are handled: exact, generalised, novel -> results/REPEATS.md
     neo4d proof-grows         proof that it mutates and its knowledge grows -> results/PROOF_GROWS.md
+    neo4d proof-hard          the same proof on C, C++, Java, harder operators, a noisy teacher -> results/PROOF_HARD.md
     neo4d novelty             does novelty die? new-pattern rate on bugs, click and the mutation domain -> results/NOVELTY.md
     neo4d prompts             regenerate the swarm-law prompts
 
@@ -87,14 +88,14 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     j = sub.add_parser("judge")
     j.add_argument("--quick", action="store_true")
-    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty", "relate-v2", "kit-topology", "repeats", "proof-grows"):
+    for name in ("shapes", "generalize", "corpus", "corpus-big", "learn", "swarm", "realfix", "replay", "prompts", "edge", "adversarial", "silicon", "quixbugs", "robustness", "exact", "inductive", "degeneracy", "induce-live", "kit-scaling", "kit-language", "kit-outage", "kit-federation", "kit-proof", "router5-math", "router5-live", "relations", "relate-live", "domain-mutation", "domain-hard", "novelty", "relate-v2", "kit-topology", "repeats", "proof-grows", "proof-hard"):
         sub.add_parser(name)
     a, rest = ap.parse_known_args(argv)
     if a.cmd == "judge":
         return judge_all(a.quick)
     mod = {"shapes": "polytopes", "generalize": "generalize", "corpus": "corpus4d", "corpus-big": "corpus4d_big",
            "learn": "harvest_pick", "swarm": "experiment", "realfix": "realfix", "replay": "replay",
-           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard", "relate-v2": "relate_v2_check", "kit-topology": "kit_topology", "repeats": "repeats", "proof-grows": "proof_grows"}[a.cmd]
+           "prompts": "make_prompts", "edge": "edge_cases", "adversarial": "adversarial", "silicon": "silicon", "quixbugs": "quixbugs", "robustness": "robustness", "exact": "exactmath", "inductive": "inductive", "degeneracy": "degeneracy", "induce-live": "induce_live", "kit-scaling": "kit_scaling", "kit-language": "kit_language", "kit-outage": "kit_outage", "kit-federation": "kit_federation", "kit-proof": "kit_proof", "router5-math": "router5_math", "router5-live": "router5_live", "relations": "relations", "relate-live": "relate_live", "domain-mutation": "domain_mutation", "novelty": "novelty", "domain-hard": "domain_hard", "relate-v2": "relate_v2_check", "kit-topology": "kit_topology", "repeats": "repeats", "proof-grows": "proof_grows", "proof-hard": "proof_hard"}[a.cmd]
     import importlib
     m = importlib.import_module(f"neo4d.{mod}")
     sys.argv = [f"neo4d {a.cmd}"] + rest
