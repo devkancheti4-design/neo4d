@@ -445,7 +445,8 @@ def run(args):
 
     def one(inst):
         t0 = time.time()
-        env = DockerEnv(image_of(inst["instance_id"], args.image), f"neo4d_{args.condition}_{inst['instance_id']}".replace("/", "_"))
+        env = DockerEnv(image_of(inst["instance_id"], args.image),           # one name per run: runs can share a machine
+                        f"neo4d_{out.resolve().name}_{inst['instance_id']}".replace("/", "_"))
         try:
             diff, traj = solve(env, inst, args.model, args.condition, args.seed, args.rounds)
         finally:
