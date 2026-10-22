@@ -134,8 +134,7 @@ the project's tests.
 4. Open a pull request with the new folder.
 
 The rules this agent already keeps: pass@1 (one attempt per issue), no `hints_text`, no oracle telling it which files
-to edit, trajectories included. The leaderboard links to your code: make `github.com/devkancheti4-design/neo4d`
-public before you submit. A "verified" checkmark needs the SWE-bench team to reproduce the run - open an issue there
+to edit, trajectories included. The leaderboard links to your code: it is public at `github.com/devkancheti4-design/neo4d`. A "verified" checkmark needs the SWE-bench team to reproduce the run - open an issue there
 explaining how to run it.
 
 ## 10. Honest expectations

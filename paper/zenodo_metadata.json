@@ -22,6 +22,6 @@
     ],
     "license": "cc-by-4.0",
     "language": "eng",
-    "notes": "The paper is CC BY 4.0; the code is AGPL-3.0. All code, results and raw runs: github.com/devkancheti4-design/neo4d (make the repository public, or upload the source archive with this record, before publishing)."
+    "notes": "The paper is CC BY 4.0; the code is AGPL-3.0-or-later. All code, results and raw runs: https://github.com/devkancheti4-design/neo4d"
   }
 }
