@@ -1,6 +1,7 @@
 """neo4d_full on a local checkout with a scripted model: PICK orders the trials, SHIP decides the green ones, the memory
 (RELATE v2) learns only single-line fixes and survives a restart."""
 import subprocess
+import sys
 
 from neo4d import swe_agent as S
 from neo4d import swe_full as F
@@ -43,6 +44,7 @@ def test_laws_are_what_the_kernels_say():
 
 def test_neo4d_full_fixes_a_one_token_bug_before_the_model(tmp_path, monkeypatch):
     monkeypatch.setattr(S, "generate", fake)
+    monkeypatch.setattr(S, "test_command", lambda inst, files: f"{sys.executable} -m pytest -q -x {' '.join(files)}")
     inst = dict(instance_id="t__gcd-2", repo="t/gcd", version="0", problem_statement=ISSUE)
     lessons = []
     diff, traj = S.solve(checkout(tmp_path), inst, "fake", "neo4d_full", rounds=2, memory=F.Memory(F.relate_v2()),
