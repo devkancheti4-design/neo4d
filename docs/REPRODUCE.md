@@ -5,8 +5,9 @@ anyone can run on a laptop in minutes (from the data recorded in `results/data/`
 
 ## 1. The headline, in one minute, on any computer (no GPU)
 
-> **Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of
-> magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.**
+> **Where answers can be checked exactly, neo4d's model-free search matches or beats reasoning models at zero model
+> tokens (60/60 and 57/60 puzzles, against 58/60 and 54/60 for Qwen3.8-27B thinking and 5/60 and 1/60 for
+> DeepSeek-R1-Distill-Llama-8B), and Qwen3.8-27B's 13-31-token instant guess plus the search solves 60/60 in both.**
 
 ```bash
 git clone https://github.com/devkancheti4-design/neo4d.git
@@ -16,9 +17,10 @@ pip install -e .
 python -m neo4d.reasoning_vs_search --recheck
 ```
 
-It makes the 120 puzzles again from their seed, reads and checks again every reply the reasoning model gave (kept in
-`results/data/reasoning/reasoning_runs.json.gz`), runs neo4d's search again, and compares each number with the
-recorded one. Expected output:
+For both models it makes the 120 puzzles again from their seed, reads and checks again every reply the model gave
+(`results/data/reasoning/reasoning_runs.json.gz`, `reasoning_runs_qwen3.8_27b.json.gz`), runs neo4d's search again at
+every budget, and compares each number with the recorded one; it ends with "Every number reproduced." The first lines
+of its output:
 
 ```
 countdown (60 puzzles, seed 1)
@@ -43,7 +45,7 @@ Every number reproduced.
 The search is deterministic; the whole check takes under a second. To read the replies yourself:
 `python -c "import gzip,json; d=json.loads(gzip.open('results/data/reasoning/reasoning_runs.json.gz').read()); print(d['results']['countdown'][0]['A_text'][-500:])"`.
 
-## 2. The headline from scratch, on a GPU (about 1.5 hours)
+## 2. The headline from scratch, on a GPU (about 1.5 hours per model; Qwen3.8-27B about 3.5 hours)
 
 What we used: one NVIDIA L4 (24 GB), driver 570.133 (CUDA 12.8), Ubuntu 24.04, Python 3.12 - an E2E Networks node
 at ₹49 an hour; any 24 GB GPU works.
@@ -55,7 +57,15 @@ python3 -m venv ~/venv-vllm
 ~/venv-vllm/bin/python -m neo4d.reasoning_vs_search --tasks 60 --seed 1
 ```
 
-It downloads DeepSeek-R1-Distill-Llama-8B (about 15 GB) from Hugging Face, runs the four configurations on 60
+Qwen3.8-27B through ollama (18 GB; `OLLAMA_NUM_PARALLEL=8`, `OLLAMA_FLASH_ATTENTION=1`, `OLLAMA_KV_CACHE_TYPE=q8_0`):
+
+```bash
+ollama pull qwen3.8:27b-mtp-q4_K_M
+python -m neo4d.reasoning_vs_search --ollama qwen3.8:27b-mtp-q4_K_M --think-tokens 16000 --parallel 8 --latency 2
+python -m neo4d.reasoning_vs_search --deepen .build/reasoning_runs_qwen3.8_27b-mtp-q4_K_M.json --out results/REASONING_qwen3.8_27b.md
+```
+
+The vLLM command downloads DeepSeek-R1-Distill-Llama-8B (about 15 GB) from Hugging Face, runs the four configurations on 60
 Countdown and 60 Blocks World puzzles, and writes `results/REASONING.md` and `.build/reasoning_runs.json`.
 
 - With the same versions and GPU the numbers should come out as recorded; the reasoning model samples (temperature

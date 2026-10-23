@@ -20,11 +20,12 @@
 \maketitle
 
 \begin{abstract}
-\textbf{Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.} On two checkable puzzles, neo4d's
-model-free search solves 51 and 49 of 60 problems (Countdown, Blocks World) with no model tokens, while a reasoning
-model, DeepSeek-R1-Distill-Llama-8B thinking up to 6{,}000 tokens, solves 5 and 1 of 60 at 1{,}668 and 4{,}268 tokens
-and 2--4 minutes per problem; the model's own instant guess adds nothing, and on Blocks World it hurts, leading the
-search astray (25 of 60 from the guess, 49 from a neutral start).
+\textbf{Where answers can be checked exactly, neo4d's model-free search matches or beats reasoning models at zero
+model tokens, and a strong model's instant guess, finished by neo4d's search, solves every puzzle.} On 60 Countdown
+and 60 Blocks World puzzles, neo4d's search alone solves 60 and 57 in milliseconds on a CPU; Qwen3.8-27B thinking up to
+16{,}000 tokens solves 58 and 54 at 776 and 4{,}078 tokens and 1--4.5 minutes per problem on a GPU, and
+DeepSeek-R1-Distill-Llama-8B 5 and 1. With Qwen3.8-27B's instant answer (13--31 tokens, thinking off) as its start,
+the search solves 60 and 60.
 Language models are good at proposing roughly right answers and poor at being exactly right, cheaply, every time.
 We present \emph{neo4d}, a model-free engine that sits beside a model and supplies what the model lacks: it mutates
 code token by token and lets the tests judge every variant, it searches the neighbourhood of a model's attempt, and it
@@ -68,9 +69,10 @@ have proved barren.
 
 \paragraph{Contributions.}
 \begin{enumerate}
-  \item \textbf{Search against reasoning tokens.} With an exact checker, neo4d's search alone solves 51 and 49 of 60
-  puzzles where a reasoning model solves 5 and 1, at no model tokens against thousands per problem; the model's
-  instant guess adds nothing and can hurt (\S\ref{sec:reasoning}).
+  \item \textbf{Search against reasoning tokens.} With an exact checker, neo4d's search alone matches or beats two
+  reasoning models at no model tokens (60 and 57 of 60 puzzles, against 58 and 54 for Qwen3.8-27B thinking and 5 and 1
+  for an 8B R1 distillation), and a strong model's 13--31-token instant guess plus the search solves all 60 in both
+  domains: guess close, search exact (\S\ref{sec:reasoning}).
   \item \textbf{A verified memory law.} RELATE v2 maps a level and six bits of evidence to one of four trust levels
   with 48 branch-free instructions. We give its principles, the exhaustive and formal checks, the properties that govern
   barren patterns, and what is \emph{not} proved (\S\ref{sec:law}). Under a noisy teacher it keeps 58.4\% precision
@@ -235,14 +237,15 @@ build and run this study) answered a sample under a handicap (two rounds of acti
 
 \subsection{Search against reasoning tokens}
 \label{sec:reasoning}
-A reasoning model spends tokens thinking before it answers. Where the answer can be checked exactly, neo4d spends
-checks instead. DeepSeek-R1-Distill-Llama-8B ran on an NVIDIA L4 (vLLM, temperature 0.6, seed 0, one try) on 60
-problems of each of the core's two non-code domains (\S\ref{sec:core}), with the domain's own prompt, in four
-configurations: (A) reasoning, its \texttt{<think>} block up to 6{,}000 tokens; (B0) reasoning off---an empty
-\texttt{<think></think>} pre-filled, so it answers at once; (B) that instant guess handed to neo4d's search (beam,
-depth 4, up to 400 checks); (S) neo4d's search from the domain's fixed start, no model (Table~\ref{tab:reasoning}).
-Every configuration's answer is read the same way (the domain's parser, then \verb|\boxed{...}|, LaTeX operators and
-inline expressions).
+A reasoning model spends tokens thinking before it answers; where the answer can be checked exactly, neo4d spends
+checks instead. Two reasoning models ran on an NVIDIA L4 on 60 problems of each of the core's non-code domains
+(\S\ref{sec:core}), seed 1, the domain's own prompt, temperature 0.6, one try: Qwen3.8-27B (4-bit, ollama), thinking up
+to 16{,}000 tokens, and DeepSeek-R1-Distill-Llama-8B (vLLM), thinking up to 6{,}000. Each ran in four configurations:
+(A) thinking; (B0) thinking off, an instant answer; (B) that instant answer handed to neo4d's search; (S) neo4d's
+search from the domain's fixed start, no model (Table~\ref{tab:reasoning}). The search is a beam search over one-step
+variants ranked by the checker's partial score, limited by a budget of 2{,}000 checks with no limit on depth (the
+setting of the scaling test, fixed before these runs); no law steers it. Every configuration's answer is read the same
+way (the domain's parser, then \verb|\boxed{...}|, LaTeX operators and inline expressions).
 \begin{table}[H]
 \centering\small
 \setlength{\tabcolsep}{4pt}
@@ -250,23 +253,27 @@ inline expressions).
 \toprule
 configuration & Countdown & Blocks World & model tokens per problem & seconds per problem\\
 \midrule
-(A) the model reasoning & 5/60 & 1/60 & 1{,}668 / 4{,}268 & 127 / 227\\
-(B0) its instant guess & 3/60 & 1/60 & 149 / 226 & 9 / 16\\
-(B) instant guess + neo4d's search & 51/60 & 25/60 & 149 / 226 & 9 / 16, + 0.01\\
-\textbf{(S) neo4d's search alone} & \textbf{51/60} & \textbf{49/60} & \textbf{0} & \textbf{0.01}\\
+(A) Qwen3.8-27B thinking & 58/60 & 54/60 & 776 / 4{,}078 & 67 / 271 (GPU)\\
+(B0) its instant answer & 16/60 & 10/60 & 13 / 31 & 8 / 9\\
+\textbf{(B) its instant answer + neo4d's search} & \textbf{60/60} & \textbf{60/60} & \textbf{13 / 31} & 8 / 9, + ms\\
+(A) R1-Distill-Llama-8B thinking & 5/60 & 1/60 & 1{,}668 / 4{,}268 & 127 / 227 (GPU)\\
+(B) its instant answer + neo4d's search & 60/60 & 55/60 & 149 / 226 & 9 / 16, + ms\\
+\textbf{(S) neo4d's search alone} & \textbf{60/60} & \textbf{57/60} & \textbf{0} & \textbf{0.003 (CPU)}\\
 \bottomrule
 \end{tabular}
-\caption{Solved of 60 per domain (seed 1). Seconds per problem: one at a time, on a sample of five; the search runs
-on a CPU. On Blocks World 27 of the 60 reasoning chains reached the 6{,}000-token limit.}
+\caption{Solved of 60 per domain. Seconds per problem: one at a time, on a sample; the search runs on a CPU. With depth
+at most 4 (the first run's setting) the search alone solves 51 and 49.}
 \label{tab:reasoning}
 \end{table}
-The reasoning model's thinking does not pay here: it solves 5 and 1 of 60, slowly. neo4d's search, with nothing but
-the checker's partial score to rank by, solves 51 and 49. The model's guess is no help: from it the search does as
-well on Countdown and worse on Blocks World, where a wrong plan is a worse start than an empty one. This is what the
-title means in reverse: when the guess is not close, search should not start from it. The limits are plain. These
-are small puzzles with an exact, cheap checker, where search over one-step changes is strong; an 8B distilled model is
-far from the strongest reasoner; and a domain without such a checker gives the search nothing to rank by. The claim is
-that where an exact checker exists, search replaces paying for reasoning tokens---not that it replaces reasoning.
+Thinking pays, for a strong model: Qwen3.8-27B solves 58 and 54 where the 8B distillation solves 5 and 1. But neo4d's
+search, with nothing but the checker to rank by, matches or beats it at no model tokens, in milliseconds on a CPU
+against minutes on a GPU. And the two together do best: the strong model's instant answer, written without thinking in
+13 to 31 tokens, is close enough that the search finishes all 60 in both domains---more than the same model thinking
+with 25 to 130 times the tokens. The weak model's instant answer is no help (55 of 60 on Blocks World from it, 57 from a
+neutral start): what a guess is worth depends on how close it lands. The limits are plain: small puzzles with an exact,
+cheap checker; one seed per model; and the depth-unlimited setting was applied to these runs after the first, depth-4
+results were seen (it was fixed beforehand, for the scaling test). Where no cheap exact checker exists, the search has
+nothing to rank by.
 
 \subsection{Bug stream: memory that compounds}
 \begin{table}[H]
@@ -527,8 +534,8 @@ neo4d's plans are verified, slot-abstracted and governed by a formally checked l
 CBMC~\cite{cbmc}.
 
 \section{Conclusion}
-Where an exact checker exists, neo4d's search solves what a reasoning model, thinking thousands of tokens, does
-not. A model need not be exactly right if something beside it can search exactly and remember. Under a law whose
+Where an exact checker exists, neo4d's search matches a strong reasoning model at no model tokens, and finishes that
+model's instant guess to solve every puzzle. A model need not be exactly right if something beside it can search exactly and remember. Under a law whose
 behaviour is proved over its whole input space and which keeps memory clean when a teacher is wrong, neo4d doubles a
 small model on agent work, takes a third or more of repeated work off large models at equal accuracy, beats strong
 equal-budget baselines on real bugs with one small model (and matches them with another) using fewer calls, carries

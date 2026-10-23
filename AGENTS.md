@@ -83,8 +83,10 @@ commands.
 ## 5. State of the work (2026-10-23)
 
 **Finished 2026-10-22/23, on an E2E NVIDIA L4 and with Claude subagents:**
-- `results/REASONING.md`: neo4d's search alone solves Countdown 51/60 and Blocks 49/60; DeepSeek-R1-Distill-Llama-8B
-  reasoning solves 5/60 and 1/60 at 1,668 and 4,268 tokens per problem; the model's instant guess adds nothing.
+- `results/REASONING.md`, `results/REASONING_qwen3.8_27b.md`: neo4d's search alone (2,000 checks, depth by budget)
+  solves Countdown 60/60 and Blocks 57/60 at no model tokens; Qwen3.8-27B thinking 58/60 and 54/60 (776 and 4,078
+  tokens per problem); DeepSeek-R1-Distill-Llama-8B 5/60 and 1/60; Qwen3.8-27B's instant guess + the search 60/60 and
+  60/60. `python -m neo4d.reasoning_vs_search --recheck` reproduces every number on a CPU in seconds.
 - `results/PUBLIC_AGENT.md`: 98 tasks on boltons, click and toolz; Claude Sonnet and Haiku need the model on 84 of 98
   tasks with neo4d (98 alone) at the same accepted work. The Qwen2.5-Coder-32B run (exact token counts) was queued on
   the node after the decisive test's run 2.

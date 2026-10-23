@@ -13,21 +13,23 @@ the system learn by itself.
 
 ---
 
-## Search against reasoning tokens (`neo4d/reasoning_vs_search.py`, `results/REASONING.md`)
+## Search against reasoning tokens (`neo4d/reasoning_vs_search.py`, `results/REASONING*.md`)
 
-**Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.** DeepSeek-R1-Distill-Llama-8B on an NVIDIA L4, 60 problems per domain, one try. Check it yourself in a
-minute, no GPU: `pip install -e . && python -m neo4d.reasoning_vs_search --recheck` (`docs/REPRODUCE.md`).
+**Where answers can be checked exactly, neo4d's model-free search matches or beats reasoning models at zero model
+tokens - and a strong model's instant guess, finished by neo4d's search, solves every puzzle.** 60 puzzles per domain,
+one try, an NVIDIA L4:
 
-| | Countdown solved | Blocks World solved | model tokens per problem | seconds per problem |
+| | Countdown | Blocks World | model tokens per problem | seconds per problem |
 |---|---|---|---|---|
-| the model reasoning (`<think>`, up to 6,000 tokens) | 5/60 | 1/60 | 1,668 / 4,268 | 127 / 227 |
-| the model's instant guess (thinking off) | 3/60 | 1/60 | 149 / 226 | 9 / 16 |
-| instant guess + neo4d's search (400 checks) | 51/60 | 25/60 | 149 / 226 | 9 / 16, + 0.01 search |
-| **neo4d's search alone, no model** | **51/60** | **49/60** | **0** | **about 0.01** |
+| Qwen3.8-27B (4-bit), thinking up to 16,000 tokens | 58/60 | 54/60 | 776 / 4,078 | 67 / 271 (GPU) |
+| **Qwen3.8-27B's instant guess (thinking off) + neo4d's search** | **60/60** | **60/60** | **13 / 31** | 8 / 9, + milliseconds |
+| DeepSeek-R1-Distill-Llama-8B, thinking up to 6,000 tokens | 5/60 | 1/60 | 1,668 / 4,268 | 127 / 227 (GPU) |
+| **neo4d's search alone, no model** | **60/60** | **57/60** | **0** | **about 0.003 (CPU)** |
 
-The model's own guess adds nothing - on Blocks a wrong guess leads the search astray. Limits: small puzzles with an
-exact checker, an 8B distilled reasoner; the claim is that where an exact checker exists, search replaces paying for
-reasoning tokens - not that it replaces reasoning in general.
+(neo4d's search: 2,000 checks, depth limited only by the budget - the setting of the scaling test, fixed before these
+runs; with depth at most 4, as in the first run, it solves 51/60 and 49/60.) Check every number in seconds, no GPU:
+`pip install -e . && python -m neo4d.reasoning_vs_search --recheck` (`docs/REPRODUCE.md`). Limits: small puzzles with an
+exact checker, one seed per model; where no cheap exact checker exists, the search has nothing to rank by.
 
 ## Fewer frontier-model calls on public repositories (`neo4d/public_agent.py`, `results/PUBLIC_AGENT.md`)
 

@@ -104,7 +104,7 @@ def run_ollama(a):
         store.write_text(json.dumps(dict(model=a.ollama, tasks=a.tasks, seed=a.seed, results=res), indent=1))
     global OUT
     OUT = REPO / "results" / f"REASONING_{slug}.md"
-    a.model = a.ollama
+    a.model, a.backend = a.ollama, "ollama"
     report(res, a)
     return 0
 
@@ -138,14 +138,17 @@ def read_answer(dom, task, text):
     return None
 
 
-def search_from(dom, task, cand, budget):
+DEEP = (2000, 10000)                    # check budgets for the search whose depth is limited only by its budget
+
+
+def search_from(dom, task, cand, budget, depth=4):
     stats = defaultdict(int)
     start = cand if cand is not None else dom.start(task)
     if cand is not None:
         stats["checks"] += 1
         if dom.check(task, cand)[0]:
             return True, "guess", stats["checks"]
-    found, _ = C.search(dom, task, [start], budget, stats, depth=4)
+    found, _ = C.search(dom, task, [start], budget, stats, depth=depth)
     return found is not None, ("neo4d" if found is not None else None), stats["checks"]
 
 
@@ -162,7 +165,25 @@ def main() -> int:
     ap.add_argument("--ollama", help="an ollama reasoning model instead of vLLM, e.g. qwen3.8:27b-mtp-q4_K_M")
     ap.add_argument("--think-tokens", type=int, default=6000, help="the most a model may think (A)")
     ap.add_argument("--parallel", type=int, default=8, help="ollama requests at once")
+    ap.add_argument("--deepen", help="a recorded run (.json or .json.gz): add the depth-by-budget search, write its report")
+    ap.add_argument("--out", help="the report's path (with --deepen)")
     a = ap.parse_args()
+    if a.deepen:
+        from pathlib import Path
+        d = deepen(Path(a.deepen))
+        a.model, a.tasks, a.seed = d["model"], d["tasks"], d["seed"]
+        a.backend = "ollama" if ":" in d["model"] else "vllm"
+        a.think_tokens = 16000 if a.backend == "ollama" else 6000
+        global OUT
+        OUT = Path(a.out) if a.out else OUT
+        out_json = Path(str(a.deepen).removesuffix(".gz"))
+        if str(a.deepen).endswith(".gz"):
+            import gzip
+            Path(a.deepen).write_bytes(gzip.compress(json.dumps(d).encode(), 9))
+        else:
+            out_json.write_text(json.dumps(d, indent=1))
+        report(d["results"], a)
+        return 0
     if a.ollama:
         return run_ollama(a)
     if a.recheck:
@@ -237,11 +258,43 @@ def main() -> int:
     return 0
 
 
-def recheck():
+def deepen(store, model_slug=None):
+    """Add neo4d's search with its depth limited only by its check budget (2,000 and 10,000 checks) to a recorded run:
+    from the fixed start (S) and from the model's instant guess (B). CPU only."""
+    import gzip
+    d = json.loads(store.read_text()) if store.suffix == ".json" else json.loads(gzip.decompress(store.read_bytes()))
+    for name, D in DOMAINS.items():
+        dom = D()
+        tasks = {t["id"]: t for t in dom.tasks(d["tasks"], d["seed"])}
+        for r in d["results"][name]:
+            t = tasks[r["id"]]
+            c = r["B_cand"]
+            cand = c if c is None or isinstance(c, str) else tuple(map(tuple, c))
+            for b in DEEP:
+                ok, _, checks = search_from(dom, t, None, b, depth=10 ** 6)
+                r[f"Sdeep_{b}"] = dict(ok=ok, checks=checks)
+                ok, how, checks = search_from(dom, t, cand, b, depth=10 ** 6)
+                r[f"Bdeep_{b}"] = dict(ok=ok, how=how, checks=checks)
+    return d
+
+
+RUNS = ("reasoning_runs.json.gz", "reasoning_runs_qwen3.8_27b.json.gz")
+
+
+def recheck(files=RUNS):
     """Everything except the model's generation, again: the same puzzles (seeded), the recorded replies read and
     checked by the domain's own checker, neo4d's search run from the recorded guesses and from the fixed start."""
     import gzip
-    rec = json.loads(gzip.decompress((REPO / "results" / "data" / "reasoning" / "reasoning_runs.json.gz").read_bytes()))
+    same = True
+    for f in files:
+        rec = json.loads(gzip.decompress((REPO / "results" / "data" / "reasoning" / f).read_bytes()))
+        print(f"\n=== {rec['model']}")
+        same &= recheck_one(rec)
+    print("\nEvery number reproduced." if same else "\nSome numbers differ - see above.")
+    return 0 if same else 1
+
+
+def recheck_one(rec):
     res, n, seed = rec["results"], rec["tasks"], rec["seed"]
     same = True
     for name, D in DOMAINS.items():
@@ -263,29 +316,50 @@ def recheck():
                 if label == "B":
                     for budget in (100, 400):
                         got[f"B_{budget}"] += search_from(dom, t, cand, budget)[0]
+                    if "Bdeep_2000" in r:
+                        for budget in DEEP:
+                            got[f"Bdeep_{budget}"] += search_from(dom, t, cand, budget, depth=10 ** 6)[0]
             for budget in (100, 400):
                 got[f"S_{budget}"] += search_from(dom, t, None, budget)[0]
+            if "Sdeep_2000" in r:
+                for budget in DEEP:
+                    got[f"Sdeep_{budget}"] += search_from(dom, t, None, budget, depth=10 ** 6)[0]
         want = {"A": sum(r["A_ok"] for r in rows), "B": sum(r["B_ok"] for r in rows),
-                **{f"{k}_{b}": sum(r[f"{k}_{b}"]["ok"] for r in rows) for k in ("B", "S") for b in (100, 400)}}
+                **{f"{k}_{b}": sum(r[f"{k}_{b}"]["ok"] for r in rows) for k in ("B", "S") for b in (100, 400)},
+                **{f"{k}deep_{b}": sum(r[f"{k}deep_{b}"]["ok"] for r in rows) for k in ("B", "S") for b in DEEP
+                   if f"{k}deep_{b}" in rows[0]}}
         names = {"A": "A reasoning", "B": "B0 instant guess", "B_100": "B guess + search, 100 checks",
                  "B_400": "B guess + search, 400 checks", "S_100": "S search alone, 100 checks",
-                 "S_400": "S search alone, 400 checks"}
+                 "S_400": "S search alone, 400 checks",
+                 **{f"Bdeep_{b}": f"B guess + search, {b}, deep" for b in DEEP},
+                 **{f"Sdeep_{b}": f"S search alone, {b}, deep" for b in DEEP}}
+        names = {k: v for k, v in names.items() if k in want}
         print(f"\n{name} ({len(rows)} puzzles, seed {seed})")
         for k, label in names.items():
             mark = "same" if got[k] == want[k] else "DIFFERENT"
             same &= got[k] == want[k]
             print(f"  {label:32s} recorded {want[k]:2d}/{len(rows)}  now {got[k]:2d}/{len(rows)}  {mark}")
-    print("\nEvery number reproduced." if same else "\nSome numbers differ - see above.")
-    return 0 if same else 1
+    return same
 
 
 def report(res, a):
     cd, bw = res["countdown"], res["blocks"]
-    s4 = lambda rows, k: sum(r[k]["ok"] for r in rows)
+    s4 = lambda rows, k: sum(r[k]["ok"] for r in rows if k in r)
+    deep = "Sdeep_2000" in cd[0]
+    best = "Sdeep_2000" if deep else "S_400"
+    sa, sb, ma, mb = s4(cd, best), s4(bw, best), sum(r["A_ok"] for r in cd), sum(r["A_ok"] for r in bw)
+    if sa >= 10 * max(ma, 1) and sb >= 10 * max(mb, 1):
+        verdict = "outperforms the reasoning model by an order of magnitude"
+    elif sa >= ma and sb >= mb:
+        verdict = "matches or beats the reasoning model"
+    else:
+        verdict = "does not match the reasoning model in every domain"
     lines = ["# Reasoning tokens against neo4d's search", "",
-             f"**Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order "
-             f"of magnitude ({s4(cd, 'S_400')} vs {sum(r['A_ok'] for r in cd)} and {s4(bw, 'S_400')} vs "
-             f"{sum(r['A_ok'] for r in bw)} of 60 puzzles) at zero model tokens.** Check it in a second on any computer: "
+             f"**Model `{a.model}`. Where answers can be checked exactly, neo4d's model-free search {verdict}: "
+             f"{sa}/{len(cd)} and {sb}/{len(bw)} puzzles (Countdown, Blocks World; {best.replace('Sdeep_', '').replace('S_', '')} "
+             f"checks{', depth limited only by the budget' if deep else ''}) against {ma}/{len(cd)} and {mb}/{len(bw)} for the "
+             f"model thinking - at zero model tokens against {sum(r['A_tokens'] for r in cd) / len(cd):.0f} and "
+             f"{sum(r['A_tokens'] for r in bw) / len(bw):.0f} per problem.** Check it in a second on any computer: "
              "`python -m neo4d.reasoning_vs_search --recheck` (docs/REPRODUCE.md).", "",
              f"On two checkable puzzles, neo4d's search solved {s4(cd, 'S_400')}/60 (Countdown) and {s4(bw, 'S_400')}/60 "
              f"(Blocks World) with no model tokens; the reasoning model, thinking, solved {sum(r['A_ok'] for r in cd)}/60 "
@@ -301,9 +375,10 @@ def report(res, a):
              "replaces paying for reasoning tokens. Answers are read the same way in every configuration (the domain's "
              "parser, then \\boxed{...}, LaTeX operators and inline expressions); the first run's stricter reading is kept "
              "in results/data/reasoning/REASONING_first_parse.md.", "",
-             f"Generated by `neo4d/reasoning_vs_search.py`. Model `{a.model}` (vLLM, NVIDIA L4); {a.tasks} tasks per "
+             f"Generated by `neo4d/reasoning_vs_search.py`. Model `{a.model}` ({'ollama' if getattr(a, 'backend', 'vllm') == 'ollama' else 'vLLM'}, NVIDIA L4); {a.tasks} tasks per "
              f"domain, seed {a.seed}; temperature 0.6, seed 0, one try. A: the model reasons (up to {getattr(a, 'think_tokens', 6000):,} tokens). "
-             "B: reasoning off (an empty <think></think> pre-filled), an instant guess, then neo4d's search from it. B0: "
+             + ("B: reasoning off (ollama's think=false), " if getattr(a, "backend", "vllm") == "ollama" else
+             "B: reasoning off (an empty <think></think> pre-filled), ") + "an instant guess, then neo4d's search from it. B0: "
              "the guess alone. S: neo4d's search alone, no model.", ""]
     for name in DOMAINS:
         rows = res[name]
@@ -324,8 +399,15 @@ def report(res, a):
                          f"({sum(x['how'] == 'neo4d' for x in b)} by the search) | {mean('B_tokens'):.0f} | "
                          f"{res[f'{name}_B_batch_seconds']} + search | {sum(lb) / len(lb):.1f} + "
                          f"{sum(x['seconds'] for x in b) / n:.2f} | {sum(x['checks'] for x in b) / n:.0f} |")
-            lines.append(f"| S search alone, {budget} checks | {sum(x['ok'] for x in s)}/{n} | 0 | 0 | - | "
+            lines.append(f"| S search alone, {budget} checks, depth at most 4 | {sum(x['ok'] for x in s)}/{n} | 0 | 0 | - | "
                          f"{sum(x['checks'] for x in s) / n:.0f} |")
+        for budget in (DEEP if "Sdeep_2000" in rows[0] else ()):
+            b = [r[f"Bdeep_{budget}"] for r in rows]
+            s = [r[f"Sdeep_{budget}"] for r in rows]
+            lines.append(f"| B guess + neo4d, {budget} checks, depth by budget | {sum(x['ok'] for x in b)}/{n} | "
+                         f"{mean('B_tokens'):.0f} | {res[f'{name}_B_batch_seconds']} + search | - | {sum(x['checks'] for x in b) / n:.0f} |")
+            lines.append(f"| **S search alone, {budget} checks, depth by budget** | **{sum(x['ok'] for x in s)}/{n}** | 0 | 0 | "
+                         f"about 0.003 (CPU) | {sum(x['checks'] for x in s) / n:.0f} |")
         both = [(r["A_ok"], r["B_400"]["ok"]) for r in rows]
         lines += ["", f"A solved and B (400) did not: {sum(x and not y for x, y in both)}; B solved and A did not: "
                   f"{sum(y and not x for x, y in both)}. A's reasoning was cut off (no answer within {getattr(a, 'think_tokens', 6000):,} tokens) on "
