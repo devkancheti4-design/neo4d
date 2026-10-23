@@ -1,6 +1,6 @@
 # neo4d
 
-**Paper:** *Guess Close, Search Exact: A Formally Verified, Model-Free Memory and Mutation Engine for Language-Model Agents* - Devieswar Kancheti, 2026, Zenodo. DOI: [10.5281/zenodo.23582871](https://doi.org/10.5281/zenodo.23582871) (all versions: [10.5281/zenodo.23582870](https://doi.org/10.5281/zenodo.23582870)).
+**Paper:** *Guess Close, Search Exact: A Formally Verified, Model-Free Memory and Mutation Engine for Language-Model Agents* - Devieswar Kancheti, 2026, Zenodo. DOI: [10.5281/zenodo.23582871](https://doi.org/10.5281/zenodo.23582871) (all versions: [10.5281/zenodo.23582870](https://doi.org/10.5281/zenodo.23582870)). `paper/neo4d.pdf` here is version 2 (2026-10-23), with search against reasoning tokens first; the Zenodo record holds version 1.
 
 **A self-learning core that generalises on 4D structures.** It mutates the code it is pointed at to harvest its own
 worked examples, routes them through a 4D relabelling space so five examples determine the whole mapping, and makes

@@ -20,6 +20,11 @@
 \maketitle
 
 \begin{abstract}
+\textbf{Where an exact checker exists, search beats paying for reasoning tokens.} On two checkable puzzles, neo4d's
+model-free search solves 51 and 49 of 60 problems (Countdown, Blocks World) with no model tokens, while a reasoning
+model, DeepSeek-R1-Distill-Llama-8B thinking up to 6{,}000 tokens, solves 5 and 1 of 60 at 1{,}668 and 4{,}268 tokens
+and 2--4 minutes per problem; the model's own instant guess adds nothing, and on Blocks World it hurts, leading the
+search astray (25 of 60 from the guess, 49 from a neutral start).
 Language models are good at proposing roughly right answers and poor at being exactly right, cheaply, every time.
 We present \emph{neo4d}, a model-free engine that sits beside a model and supplies what the model lacks: it mutates
 code token by token and lets the tests judge every variant, it searches the neighbourhood of a model's attempt, and it
@@ -33,7 +38,8 @@ equal coverage. We measure the engine with local 4B models, with Claude Haiku an
 the same tools, and against a Claude assistant. With neo4d, phi4-mini fixes 62.5\% of 176 bugs (30.7\% alone, 42.0\%
 with three tries) and completes 47.1\% of 85 multi-step agent tasks (25.9\% alone, 40.0\% with three tries) with
 fewer calls than retrying. Sonnet and Haiku keep their accuracy (85/85, 84/85) while neo4d takes 32\% and 40\% of the
-tasks off them; a replayed plan takes 0.59\,s against 20--36\,s for a model. With Haiku only choosing which branches
+tasks off them, and on 98 tasks in three public repositories (boltons, click, toolz), checked by their own test
+suites, 14\% of the tasks at the same accepted work; a replayed plan takes 0.59\,s against 20--36\,s for a model. With Haiku only choosing which branches
 to explore, neo4d's search fixes 17 hard two-fault bugs where a blind search fixes 14 and a random filter 12.0 on
 average, with 60\% fewer test runs. On real bugs at an equal budget over three seeds, a loop in which neo4d mutates
 each of the model's attempts fixes 24.7 of 31 with gemma3:4b against 16.0--18.7 for sample-and-filter, self-debugging
@@ -41,7 +47,8 @@ and Reflexion ($p \le 0.016$) with about 35\% fewer calls; with phi4-mini it lea
 significant difference. On two domains that are not code---a numbers puzzle and block-stacking plans---the same core,
 unchanged, lifts both small models far above their own methods (Countdown: from 0 to 26--31 of 40), but its search
 alone, with no model, does as well or better: there the small models' guesses are worse starts than a neutral one. We
-report equally plainly what failed: evidence handed to a small model as a paragraph made it worse, marks on suspect
+report equally plainly what failed: neo4d's verified programs did not make better training data than sampled ones
+(unfiltered, they hurt), evidence handed to a small model as a paragraph made it worse, marks on suspect
 lines helped one model and hurt another, and nothing helped on problems a strong model already solves. neo4d adds
 power by doing work and remembering it, not by advising.
 \end{abstract}
@@ -61,6 +68,9 @@ have proved barren.
 
 \paragraph{Contributions.}
 \begin{enumerate}
+  \item \textbf{Search against reasoning tokens.} With an exact checker, neo4d's search alone solves 51 and 49 of 60
+  puzzles where a reasoning model solves 5 and 1, at no model tokens against thousands per problem; the model's
+  instant guess adds nothing and can hurt (\S\ref{sec:reasoning}).
   \item \textbf{A verified memory law.} RELATE v2 maps a level and six bits of evidence to one of four trust levels
   with 48 branch-free instructions. We give its principles, the exhaustive and formal checks, the properties that govern
   barren patterns, and what is \emph{not} proved (\S\ref{sec:law}). Under a noisy teacher it keeps 58.4\% precision
@@ -76,6 +86,8 @@ have proved barren.
   improves a search and cuts its cost (\S\ref{sec:search}).
   \item \textbf{A domain-free core.} The loop, the search, memory and the law in one file that names no domain; two
   small adapters carry it to a numbers puzzle and to planning (\S\ref{sec:core}).
+  \item \textbf{Public repositories.} On 98 everyday agent tasks in three public repositories, neo4d's plans do 14 with
+  no call to Claude Sonnet or Haiku, at the same accepted work (\S\ref{sec:public}).
   \item \textbf{Negative results}, reported with the same care (\S\ref{sec:negative}), and every run released.
 \end{enumerate}
 
@@ -220,6 +232,41 @@ build and run this study) answered a sample under a handicap (two rounds of acti
 \end{itemize}
 
 \section{Results}
+
+\subsection{Search against reasoning tokens}
+\label{sec:reasoning}
+A reasoning model spends tokens thinking before it answers. Where the answer can be checked exactly, neo4d spends
+checks instead. DeepSeek-R1-Distill-Llama-8B ran on an NVIDIA L4 (vLLM, temperature 0.6, seed 0, one try) on 60
+problems of each of the core's two non-code domains (\S\ref{sec:core}), with the domain's own prompt, in four
+configurations: (A) reasoning, its \texttt{<think>} block up to 6{,}000 tokens; (B0) reasoning off---an empty
+\texttt{<think></think>} pre-filled, so it answers at once; (B) that instant guess handed to neo4d's search (beam,
+depth 4, up to 400 checks); (S) neo4d's search from the domain's fixed start, no model (Table~\ref{tab:reasoning}).
+Every configuration's answer is read the same way (the domain's parser, then \verb|\boxed{...}|, LaTeX operators and
+inline expressions).
+\begin{table}[H]
+\centering\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+configuration & Countdown & Blocks World & model tokens per problem & seconds per problem\\
+\midrule
+(A) the model reasoning & 5/60 & 1/60 & 1{,}668 / 4{,}268 & 127 / 227\\
+(B0) its instant guess & 3/60 & 1/60 & 149 / 226 & 9 / 16\\
+(B) instant guess + neo4d's search & 51/60 & 25/60 & 149 / 226 & 9 / 16, + 0.01\\
+\textbf{(S) neo4d's search alone} & \textbf{51/60} & \textbf{49/60} & \textbf{0} & \textbf{0.01}\\
+\bottomrule
+\end{tabular}
+\caption{Solved of 60 per domain (seed 1). Seconds per problem: one at a time, on a sample of five; the search runs
+on a CPU. On Blocks World 27 of the 60 reasoning chains reached the 6{,}000-token limit.}
+\label{tab:reasoning}
+\end{table}
+The reasoning model's thinking does not pay here: it solves 5 and 1 of 60, slowly. neo4d's search, with nothing but
+the checker's partial score to rank by, solves 51 and 49. The model's guess is no help: from it the search does as
+well on Countdown and worse on Blocks World, where a wrong plan is a worse start than an empty one. This is what the
+title means in reverse: when the guess is not close, search should not start from it. The limits are plain. These
+are small puzzles with an exact, cheap checker, where search over one-step changes is strong; an 8B distilled model is
+far from the strongest reasoner; and a domain without such a checker gives the search nothing to rank by. The claim is
+that where an exact checker exists, search replaces paying for reasoning tokens---not that it replaces reasoning.
 
 \subsection{Bug stream: memory that compounds}
 \begin{table}[H]
@@ -409,9 +456,30 @@ for gemma3:4b in Blocks), but removing it, or the law, changed little: the check
 The core carries across domains unchanged; whether it raises a model there depends on the model landing close, which
 these did not.
 
+\subsection{Public repositories: calls a large model no longer makes}
+\label{sec:public}
+The agent tasks of \S\ref{sec:agent}, generated from the code of three public repositories at fixed commits (boltons,
+click, toolz): 98 tasks of six kinds in one seeded stream, each accepted only by the repository's own test suite plus
+a check of the result, each task's gold solution applied and accepted before any run. Claude Sonnet and Claude Haiku
+worked as subagents through the same tools, at most 12 actions a task, one try; neo4d replayed its trusted plans in
+stream order and the model's own work counted for every other task. Sonnet: 94/98 accepted alone and with neo4d, the
+model needed on 84 tasks instead of 98, 517 actions instead of 576. Haiku: 93/98 both ways, 84 instead of 98, 503
+instead of 563. The plans took over work that recurs---renaming a parameter (5 of 10), listing a built-in's callers
+(7 of 18, two in the first half of the stream and five in the second)---and none of the fixes or new parameters,
+which need new code each time. The saving is smaller than on the generated project (\S\ref{sec:agent}), where work
+recurs more.
+
 \section{What did not work}
 \label{sec:negative}
 \begin{itemize}
+  \item \textbf{neo4d's programs as training data.} Qwen2.5-Coder-0.5B, LoRA, three seeds, trained on MBPP programs
+  that passed their tasks' tests---sampled, or sampled plus neo4d's mutated near-misses---and scored on HumanEval+ and
+  MBPP+ with its near-duplicates of training tasks removed: no arm beat another. Given more room on the hardest tasks
+  (a second run, designed after the first), unfiltered mutated programs hurt ($-5.3$ MBPP+ problems against four times
+  the samples, $p=0.009$); the nine the SHIP law certified matched four times the samples on MBPP+ with no model call
+  but lost on HumanEval+. Mutated programs behave like the reference less often (56--62\%; 67--83\% after SHIP).
+  \item \textbf{SWE-bench Lite.} A pilot with qwen2.5-coder:7b was stopped after two of three seeds: 2 of 50 issues
+  resolved alone, 3 of 50 with neo4d, no fix shipped by its mutations---a record, not a result.
   \item \textbf{Advice as a paragraph.} With neo4d's evidence before the bug, phi4-mini fixed 16 of 31 with three
   tries, against 20 without it; an exchange of three rounds with that evidence reached 18. A small model's attention
   is diluted by text it must weigh.
@@ -433,7 +501,8 @@ these did not.
 \end{itemize}
 
 \section{Threats to validity}
-The benchmarks are small (31, 85, 176 tasks). Most configurations were run once; the noisy teacher, the random
+The benchmarks are small (31, 85, 176 tasks; 60 puzzles per domain against the reasoning model, one model and one
+seed there; 98 public-repository tasks, generated from the code rather than taken from issue trackers). Most configurations were run once; the noisy teacher, the random
 control, the equal-budget baselines and the core on other domains have seeds, and the baselines show that a single-run
 difference of three bugs can shrink. The non-code domains are generated puzzles, chosen and adjusted in two recorded
 design runs before the reported seeds. QuixBugs is public, and every model may have seen it; the hard set reduces but does not remove recall. Two
@@ -444,6 +513,9 @@ built the study also answered a sample and belongs to the same family as two eva
 a check of the result) is assumed; without one neo4d cannot tell right from wrong.
 
 \section{Related work}
+Reasoning models such as DeepSeek-R1~\cite{deepseekr1} spend test-time tokens thinking; tree search over a
+model's thoughts~\cite{tot} spends model calls; neo4d spends checks, and here none of the model's. Training on a
+model's own verified answers~\cite{star,rest} is the use of verified data our training test examines.
 Mutation testing~\cite{demillo1978,jia2011} supplies the operators and mutation-based fault
 localisation~\cite{metallaxis} the \emph{moved} signal. Search-based repair such as GenProg~\cite{genprog} evolves
 patches against tests; neo4d instead searches the neighbourhood of a model's attempt and remembers what passed.
@@ -455,7 +527,8 @@ neo4d's plans are verified, slot-abstracted and governed by a formally checked l
 CBMC~\cite{cbmc}.
 
 \section{Conclusion}
-A model need not be exactly right if something beside it can search exactly and remember. Under a law whose
+Where an exact checker exists, neo4d's search solves what a reasoning model, thinking thousands of tokens, does
+not. A model need not be exactly right if something beside it can search exactly and remember. Under a law whose
 behaviour is proved over its whole input space and which keeps memory clean when a teacher is wrong, neo4d doubles a
 small model on agent work, takes a third or more of repeated work off large models at equal accuracy, beats strong
 equal-budget baselines on real bugs with one small model (and matches them with another) using fewer calls, carries
@@ -465,7 +538,10 @@ itself. It does not make a model reason better by advising it, and it cannot cre
 \paragraph{Reproducibility.} \sloppy Every number comes from a command in the repository: \texttt{neo4d local-model},
 \texttt{local-agent} (with \texttt{--agent-score sonnet,haiku}), \texttt{local-hints} (with \texttt{--loop},
 \texttt{--focus}, \texttt{--search-score}), \texttt{python -m neo4d.rigor} (\texttt{--law}, \texttt{--agent},
-\texttt{--random}, \texttt{--baselines}), \texttt{python -m neo4d.core\_experiment}. Every action of the Claude subagents and every local run is in
+\texttt{--random}, \texttt{--baselines}), \texttt{python -m neo4d.core\_experiment},
+\texttt{python -m neo4d.reasoning\_vs\_search}, \texttt{python -m neo4d.public\_agent} (\texttt{--agent-score
+sonnet,haiku} replays the recorded traces), \texttt{python -m neo4d.decisive} (\texttt{restore} then \texttt{report},
+\texttt{decontam}, \texttt{report\_free} remake every table without a GPU). Every action of the Claude subagents and every local run is in
 \texttt{results/data/}.
 
 \paragraph{Use of AI.} The implementation, experiments and text were produced with Claude Code (Anthropic) under the
@@ -485,5 +561,9 @@ author's direction; the author chose the questions and the claims. Claude models
 \bibitem{alphacode} Y.~Li et al. Competition-level code generation with AlphaCode. \emph{Science} 378, 2022.
 \bibitem{voyager} G.~Wang et al. Voyager: an open-ended embodied agent with large language models. arXiv:2305.16291, 2023.
 \bibitem{sweagent} J.~Yang et al. SWE-agent: agent-computer interfaces enable automated software engineering. \emph{NeurIPS}, 2024.
+\bibitem{deepseekr1} DeepSeek-AI. DeepSeek-R1: incentivizing reasoning capability in LLMs via reinforcement learning. arXiv:2501.12948, 2025.
+\bibitem{tot} S.~Yao et al. Tree of thoughts: deliberate problem solving with large language models. \emph{NeurIPS}, 2023.
+\bibitem{star} E.~Zelikman, Y.~Wu, J.~Mu, N.~D. Goodman. STaR: bootstrapping reasoning with reasoning. \emph{NeurIPS}, 2022.
+\bibitem{rest} C.~Gulcehre et al. Reinforced self-training (ReST) for language modeling. arXiv:2308.08998, 2023.
 \end{thebibliography}
 \end{document}
