@@ -42,6 +42,30 @@ def answer_part(text):
     return text.split("</think>", 1)[1] if "</think>" in text else text
 
 
+LATEX = ((r"\\times", "*"), (r"\\cdot", "*"), (r"\\div", "/"), (r"\\left", ""), (r"\\right", ""), (r"\\[(\[]", ""),
+         (r"\\[)\]]", ""), ("−", "-"), ("×", "*"), ("÷", "/"))
+
+
+def read_answer(dom, task, text):
+    """The domain's own parser, then - for both configurations alike - the same answer written another way: inside
+    \\boxed{...}, in LaTeX (\\times, \\div), or as the last arithmetic expression on a line."""
+    part = answer_part(text)
+    cand = dom.parse(task, part)
+    if cand is not None or dom.name != "countdown":
+        return cand
+    t = part
+    for a, b in LATEX:
+        t = re.sub(a, b, t)
+    tries = re.findall(r"\\boxed\{([^{}]*)\}", t)
+    for line in reversed(t.split("\n")):
+        tries += [m.strip() for m in re.findall(r"[\d\s+\-*/().]+", line) if re.search(r"\d\s*[-+*/]\s*[\d(]", m)]
+    for x in tries:
+        c = dom.parse(task, x.split("=")[0])
+        if c is not None:
+            return c
+    return None
+
+
 def search_from(dom, task, cand, budget):
     stats = defaultdict(int)
     start = cand if cand is not None else dom.start(task)
@@ -59,6 +83,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--model", default=MODEL)
     ap.add_argument("--latency", type=int, default=5, help="problems per domain timed one at a time")
+    ap.add_argument("--domains", default="countdown,blocks")
+    ap.add_argument("--reuse-latency", action="store_true", help="keep the one-at-a-time timings of the last run")
     a = ap.parse_args()
     from transformers import AutoTokenizer
     from vllm import LLM, SamplingParams
@@ -77,8 +103,9 @@ def main() -> int:
             out.append(p)
         return out
 
-    res = {}
-    for name, D in DOMAINS.items():
+    old = json.loads(STORE.read_text())["results"] if STORE.exists() else {}
+    res = dict(old)
+    for name, D in [(n, DOMAINS[n]) for n in a.domains.split(",")]:
         dom = D()
         tasks = dom.tasks(a.tasks, a.seed)
         rows = {t["id"]: dict(id=t["id"]) for t in tasks}
@@ -89,15 +116,17 @@ def main() -> int:
             secs = time.time() - t0
             for t, o in zip(tasks, outs):
                 text = o.outputs[0].text
-                cand = dom.parse(t, answer_part(text))
+                cand = read_answer(dom, t, text)
                 r = rows[t["id"]]
+                r[f"{label}_text"] = text
                 r[f"{label}_tokens"] = len(o.outputs[0].token_ids)
                 r[f"{label}_closed"] = (not thinking) or ("</think>" in text)
                 r[f"{label}_cand"] = cand if cand is None or isinstance(cand, str) else list(cand)
                 r[f"{label}_ok"] = cand is not None and dom.check(t, cand)[0]
             res[f"{name}_{label}_batch_seconds"] = round(secs, 1)
         # sequential latency on a sample: one problem at a time, as an interactive user would wait
-        for label, thinking, sp in (("A", True, think), ("B", False, quick)):
+        for label, thinking, sp in (() if a.reuse_latency and f"{name}_A_seconds_each" in old else
+                                    (("A", True, think), ("B", False, quick))):
             lat = []
             for t in tasks[:a.latency]:
                 p = prompts(dom, [t], thinking)
