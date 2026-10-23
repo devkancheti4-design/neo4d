@@ -57,6 +57,15 @@ ARMS = ("sample16", "sample64", "neo4d", "neo4d_ship")
 SEEDS = (0, 1, 2)
 TIMEOUT = 5.0
 TAIL = "Reply with the complete Python function in one ```python code block."
+SCRATCH = Path(tempfile.gettempdir()) / "decisive_run"           # model-written code runs here, never in the repository
+
+
+def _limits():
+    import resource
+    try:
+        resource.setrlimit(resource.RLIMIT_AS, (4 << 30, 4 << 30))  # 4 GB per candidate (Linux; macOS refuses)
+    except (ValueError, OSError):
+        pass
 
 
 def jl(path):
@@ -130,8 +139,9 @@ print(json.dumps([res, sorted(hits)]))
 def run_tests(src, setup, tests, trace=False):
     """-> (per-test pass list, lines of the candidate executed (1-based) when traced). A crash or timeout fails all."""
     try:
+        SCRATCH.mkdir(exist_ok=True)
         r = subprocess.run([sys.executable, "-I", "-c", RUNNER], input=json.dumps([src, setup, tests, trace]),
-                           capture_output=True, text=True, timeout=TIMEOUT)
+                           capture_output=True, text=True, timeout=TIMEOUT, cwd=SCRATCH, preexec_fn=_limits)
         res, hits = json.loads(r.stdout.strip().splitlines()[-1])
         return res, set(hits)
     except (subprocess.TimeoutExpired, ValueError, IndexError):
@@ -184,8 +194,9 @@ def probes(tests):
 
 def behaviour(src, setup, calls):
     try:
+        SCRATCH.mkdir(exist_ok=True)
         r = subprocess.run([sys.executable, "-I", "-c", PROBE], input=json.dumps([src, setup, calls]),
-                           capture_output=True, text=True, timeout=TIMEOUT)
+                           capture_output=True, text=True, timeout=TIMEOUT, cwd=SCRATCH, preexec_fn=_limits)
         return tuple(json.loads(r.stdout.strip().splitlines()[-1]))
     except (subprocess.TimeoutExpired, ValueError, IndexError):
         return ("timeout",)
@@ -398,9 +409,15 @@ def cmd_train(a):
 def eval_problems():
     from evalplus.data import get_human_eval_plus, get_mbpp_plus
     he = [("humaneval", k, prompt_humaneval(p["prompt"]), p) for k, p in get_human_eval_plus().items()]
-    mb = [("mbpp", k, f"{p['prompt'].strip()}\n{TAIL}", p) for k, p in get_mbpp_plus().items()
-          if 11 <= int(k.split("/")[1]) <= 510]
+    # every MBPP+ problem is generated (EvalPlus expects them all); only those of MBPP's test split are reported
+    mb = [("mbpp", k, f"{p['prompt'].strip()}\n{TAIL}", p) for k, p in get_mbpp_plus().items()]
     return he + mb
+
+
+def with_imports(prompt, code):
+    """The prompt's top-level imports in front of the model's function (it often leaves `from typing import List` out)."""
+    imports = [l for l in prompt.split("\n") if l.startswith(("import ", "from "))]
+    return "\n".join(imports) + ("\n\n" if imports else "") + code
 
 
 def cmd_generate(a):
@@ -414,7 +431,8 @@ def cmd_generate(a):
     outs = llm.chat([[{"role": "user", "content": p}] for _, _, p, _ in probs],
                     SamplingParams(n=1, temperature=0.0, max_tokens=768), lora_request=lora)
     for bench in ("humaneval", "mbpp"):
-        rows = [dict(task_id=k, solution=code_of(o.outputs[0].text)) for (b, k, _, _), o in zip(probs, outs) if b == bench]
+        rows = [dict(task_id=k, solution=with_imports(p["prompt"], code_of(o.outputs[0].text)))
+                for (b, k, _, p), o in zip(probs, outs) if b == bench]
         wjl(WORK / "samples" / f"{name}_{bench}.jsonl", rows)
     print(f"generated {len(probs)} -> {WORK / 'samples'}")
 
