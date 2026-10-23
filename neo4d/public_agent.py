@@ -691,6 +691,7 @@ def agent_score(runs, tasks, law):
            "other task, and neo4d learns from it.", "",
            "| solver | accepted | second half | tasks the large model was needed for | large-model actions |",
            "|---|---|---|---|---|"]
+    detail, tr_all, ids_all = {}, {}, {}
     for run in runs:
         ids = [t["id"] for t in tasks if (RUNS / run / str(t["id"]) / "trace.json").exists()]
         tr = {i: json.loads((RUNS / run / str(i) / "trace.json").read_text()) for i in ids}
@@ -698,6 +699,7 @@ def agent_score(runs, tasks, law):
         ok = {i: accepted(by[i], Sandbox.attach(RUNS / run / str(i) / "project", by[i]["repo"])) for i in ids}
         stream = [t for t in tasks if t["id"] in tr]
         half = len(stream) // 2
+        tr_all[run], ids_all[run] = tr, [t["id"] for t in stream]
         brain, stats, rows = LA.Brain(law), defaultdict(float), []
         for t in stream:
             tried, shadow, how, good = {}, {}, None, None
@@ -712,13 +714,32 @@ def agent_score(runs, tasks, law):
             for plan in [p for p in brain.ranked(t["text"], 1, 1) if p not in tried and '"write": true' not in "".join(p)][:2]:
                 shadow[plan] = replay(plan, t, None, stats)[1]
             brain.learn(t, good, tried, shadow)
-            rows.append(dict(ok=how is not None, need=how != "neo4d", acts=0 if how == "neo4d" else len(tr[t["id"]])))
+            rows.append(dict(ok=how is not None, need=how != "neo4d", acts=0 if how == "neo4d" else len(tr[t["id"]]),
+                             kind=t["kind"], repo=t["repo"], alone=ok[t["id"]]))
         alone = [ok[t["id"]] for t in stream]
         n = len(stream)
         out.append(f"| {run} alone | **{sum(alone)}/{n}** | {sum(alone[half:])}/{n - half} | {n} | "
                    f"{sum(len(tr[t['id']]) for t in stream)} |")
         out.append(f"| **neo4d + {run}** | **{sum(r['ok'] for r in rows)}/{n}** | {sum(r['ok'] for r in rows[half:])}/{n - half} | "
                    f"**{sum(r['need'] for r in rows)}** | **{sum(r['acts'] for r in rows)}** |")
+        detail[run] = rows
+    out += ["", "Tasks neo4d's plans did with no large-model call, by kind and by half of the stream:", "",
+            "| kind | tasks | " + " | ".join(f"{r}: done by neo4d (first half / second half)" for r in detail) + " |",
+            "|---|---|" + "---|" * len(detail)]
+    for kind in PHRASES:
+        cells = []
+        for r, rows in detail.items():
+            h = len(rows) // 2
+            cells.append(f"{sum(not x['need'] for x in rows if x['kind'] == kind)} "
+                         f"({sum(not x['need'] for x in rows[:h] if x['kind'] == kind)} / "
+                         f"{sum(not x['need'] for x in rows[h:] if x['kind'] == kind)})")
+        k = sum(1 for x in next(iter(detail.values())) if x["kind"] == kind) if detail else 0
+        out.append(f"| {kind} | {k} | " + " | ".join(cells) + " |")
+    for r, rows in detail.items():
+        h = len(rows) // 2
+        out.append(f"\n{r}: large-model actions first half {sum(x['acts'] for x in rows[:h])} -> second half "
+                   f"{sum(x['acts'] for x in rows[h:])} with neo4d; alone {sum(len(tr_all[r][x]) for x in ids_all[r][:h])} -> "
+                   f"{sum(len(tr_all[r][x]) for x in ids_all[r][h:])}.")
     return out
 
 
