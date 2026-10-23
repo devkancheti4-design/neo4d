@@ -5,6 +5,7 @@ authors:
   - family-names: "Kancheti"
     given-names: "Devieswar"
 repository-code: "https://github.com/devkancheti4-design/neo4d"
+doi: "10.5281/zenodo.23582870"
 license: AGPL-3.0-or-later
 preferred-citation:
   type: article
@@ -13,3 +14,6 @@ preferred-citation:
     - family-names: "Kancheti"
       given-names: "Devieswar"
   year: 2026
+  doi: "10.5281/zenodo.23582871"
+  publisher:
+    name: "Zenodo"

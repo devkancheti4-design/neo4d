@@ -1,3 +1,5 @@
+**Version 1 is published:** https://doi.org/10.5281/zenodo.23582871 (record 23582871; all versions 10.5281/zenodo.23582870). For a new version, open the record on Zenodo and choose *New version* - the steps below still apply.
+
 # Publishing the paper on Zenodo (about three minutes, done by you)
 
 1. Put your name in three places: `paper/neo4d.tex` (`\author{[Author name]...}`), `paper/zenodo_metadata.json`
