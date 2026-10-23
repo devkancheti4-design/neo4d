@@ -804,11 +804,86 @@ def cmd_report_free(a):
     print("\n".join(lines))
 
 
+DATA = REPO / "results" / "data" / "decisive"
+
+
+def cmd_restore(a):
+    """Unpack the recorded run (results/data/decisive) into the working directory, so every table can be made again
+    without a GPU: report, report_free, purity, decontam."""
+    import gzip
+    WORK.mkdir(parents=True, exist_ok=True)
+    (WORK / "data").mkdir(exist_ok=True)
+    (WORK / "samples").mkdir(exist_ok=True)
+    for f in DATA.glob("*"):
+        if f.is_file():
+            dest = WORK / ("data" if f.suffix == ".json" and f.stem.startswith(("sizes", "purity")) else "") / f.name.removesuffix(".gz")
+            dest.write_bytes(gzip.decompress(f.read_bytes()) if f.suffix == ".gz" else f.read_bytes())
+    for f in (DATA / "datasets").glob("*.gz"):
+        (WORK / "data" / f.name.removesuffix(".gz")).write_bytes(gzip.decompress(f.read_bytes()))
+    for f in (DATA / "samples").glob("*.gz"):
+        (WORK / "samples" / f.name.removesuffix(".gz")).write_bytes(gzip.decompress(f.read_bytes()))
+    print(f"restored -> {WORK}")
+
+
+def mbpp_text(prompt):
+    m = re.search(r'"""\s*(.*?)\s*assert', prompt, re.S)
+    return re.sub(r"\s+", " ", (m.group(1) if m else prompt).lower()).strip()
+
+
+def cmd_decontam(a):
+    """MBPP repeats some problems under other ids. For each held-out MBPP+ problem: its highest text similarity to any
+    data task (difflib ratio, lower case, spaces collapsed); every arm scored again without the near-duplicates."""
+    import difflib
+    from evalplus.data import get_mbpp_plus
+    held = {k: p for k, p in get_mbpp_plus().items() if 11 <= int(k.split("/")[1]) <= 510}
+    tt = [re.sub(r"\s+", " ", t["text"].lower()).strip() for t in jl(WORK / "tasks.jsonl")]
+    f = WORK / "mbpp_similarity.json"
+    sim = json.loads(f.read_text()) if f.exists() else {
+        k: max(difflib.SequenceMatcher(None, mbpp_text(p["prompt"]), t).ratio() for t in tt) for k, p in held.items()}
+    f.write_text(json.dumps(sim, indent=1))
+    lines = ["## MBPP+ without near-duplicates of the data tasks", "",
+             "No data task shares an id with a held-out problem, but MBPP repeats some problems under other ids: "
+             f"{sum(v >= 0.9 for v in sim.values())} held-out problems are at least 90% textually similar to a data task, "
+             f"{sum(v >= 0.8 for v in sim.values())} at least 80% (`python -m neo4d.decisive decontam`). Every arm "
+             "again, on the problems below each threshold (MBPP+ solved, per seed):", ""]
+    for cut in (0.9, 0.8):
+        clean = sorted(k for k, v in sim.items() if v < cut)
+        lines += [f"Below {cut} similarity: {len(clean)} problems.", "", "| arm | per seed | mean |", "|---|---|---|"]
+        table = {}
+        for arm in ("base",) + ARMS + ARMS2[1:]:
+            names = ["base"] if arm == "base" else [f"{arm}_s{s}" for s in SEEDS]
+            got = [per_task(n, "mbpp") for n in names if (WORK / "samples" / f"{n}_mbpp_eval_results.json").exists()]
+            if not got:
+                continue
+            table[arm] = got
+            vals = [sum(g[k][1] for k in clean) for g in got]
+            lines.append(f"| {arm} | {' / '.join(map(str, vals))} | {sum(vals) / len(vals):.1f} "
+                         f"({100 * sum(vals) / len(vals) / len(clean):.1f}%) |")
+        lines.append("")
+        for arm, ref in (("neo4d", "sample16"), ("neo4d", "sample64"), ("neo4d_ship", "sample16"), ("neo4d_ship", "sample64"),
+                         ("neo4d_free", "sample64"), ("neo4d_free", "sample256"), ("neo4d_free_ship", "sample64"),
+                         ("neo4d_free_ship", "sample256")):
+            if arm in table and ref in table:
+                xa = [sum(g[k][1] for g in table[arm]) / len(table[arm]) for k in clean]
+                xb = [sum(g[k][1] for g in table[ref]) / len(table[ref]) for k in clean]
+                lines.append(f"- {arm} against {ref}: {sum(xa) - sum(xb):+.2f} problems, p = {permutation_p(xa, xb):.3f}")
+        lines.append("")
+    out = REPO / "results" / "DECISIVE.md"
+    text = out.read_text() if out.exists() else ""
+    head = text.split("\n## MBPP+ without near-duplicates")[0].rstrip("\n")
+    rest = ""
+    if "\n## MBPP+ without near-duplicates" in text:
+        after = text.split("\n## MBPP+ without near-duplicates", 1)[1]
+        rest = "\n## " + after.split("\n## ", 1)[1] if "\n## " in after else ""
+    out.write_text(head + "\n\n" + "\n".join(lines) + rest)
+    print("\n".join(lines))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="neo4d.decisive")
     ap.add_argument("cmd", choices=("sample", "check", "search", "datasets", "purity", "train", "generate", "evaluate",
                                     "report", "sample_more", "search_free", "datasets_free", "purity_free",
-                                    "report_free"))
+                                    "report_free", "restore", "decontam"))
     ap.add_argument("--base", default=BASE)
     ap.add_argument("--arm", default="base", choices=("base",) + ARMS + ARMS2[1:])
     ap.add_argument("--seed", type=int, default=0)
