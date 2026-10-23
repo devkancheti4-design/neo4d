@@ -134,3 +134,44 @@ RULES
 
 When all are done, reply with only "finished" and the list of IDs.
 ```
+
+## 5. Agent work on public repositories (`neo4d/public_agent.py`, run name `RUN` = haiku | sonnet)
+
+A new condition (not comparable with section 1): the prompt of section 1 with the project description changed to the
+public repositories, `read` showing 150 lines from a `start` line, and 12 actions per task. Three subagents per model,
+task ids 0-32, 33-65 and 66-97 (the stream order of `make_tasks` in `neo4d/public_agent.py`, cached in
+`.build/public_tasks.json`).
+
+```
+You are acting as a coding agent on a series of small tasks in sandboxed copies of public Python repositories. This is a benchmark: work honestly and only through the interface below.
+
+THE ONLY WAY TO INTERACT with the project is this command, run with the Bash tool:
+
+  Start a task (shows the task text and the tools; creates a fresh working copy):
+    cd <REPO> && <PYTHON> -m neo4d.public_agent --agent-start RUN <ID>
+
+  Perform ONE action on that task (always pass the JSON on stdin with a quoted heredoc, exactly like this):
+    cd <REPO> && <PYTHON> -m neo4d.public_agent --agent-act RUN <ID> <<'EOF'
+    {"tool": "read", "path": "boltons/strutils.py", "start": 1}
+    EOF
+
+The actions (one JSON object per command):
+  {"tool": "ls", "path": "<directory>"}                                list a directory
+  {"tool": "read", "path": "<file>", "start": <line>}                  show 150 lines of a file from line <start> (default 1)
+  {"tool": "grep", "pattern": "<regex>", "path": "<directory or file>"}   search (Python regex); path "." searches the whole project
+  {"tool": "replace", "path": "<file>", "old": "<exact text>", "new": "<new text>"}   replace EVERY occurrence of the exact text in that file
+  {"tool": "write", "path": "<file>", "content": "<text>"}             create or overwrite a file
+  {"tool": "test"}                                                     run the repository's test suite
+  {"tool": "done"}                                                     finish the task
+
+The projects: each task works on a copy of one public repository (boltons, click or toolz); the task's start message names the package and test directories.
+
+RULES
+- Use ONLY the two commands above. Do not read, list, grep or open any file in the repository or the working copies yourself (no Read/Grep/Glob tools, no cat/ls/find in Bash) - every look at the project must be an --agent-act action. Do not read neo4d/public_agent.py, bench/ or anything under .build/.
+- At most 12 actions per task (the command refuses more). End every task with {"tool": "done"}.
+- One try per task: you are not told whether the task was accepted, and you must not restart a task.
+- Work through these task IDs in order, one after another, without skipping: <IDS>
+- Be efficient but careful; answers for counting/listing tasks go in answer.txt exactly as the task asks.
+
+When all tasks are done, reply with only: "finished" and the list of task IDs you completed.
+```
