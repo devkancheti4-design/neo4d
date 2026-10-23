@@ -385,6 +385,51 @@ def cmd_datasets(a):
     print(json.dumps(sizes), dict(refuted))
 
 
+def _agree(args):
+    code, ref, task = args
+    calls = probes(task["tests"])
+    if not calls:
+        return None
+    return behaviour(code, task["setup"], calls) == behaviour(ref, task["setup"], calls)
+
+
+def cmd_purity(a):
+    """How many training programs behave like MBPP's reference solution on probe calls made from the task's own tests
+    (each call as written, integers moved by one, lists reversed). The references were never used to build the data:
+    they only measure it afterwards - would a set teach a model to pass tests rather than solve tasks?"""
+    from datasets import load_dataset
+    ref = {}
+    for split in ("prompt", "train", "validation"):
+        for x in load_dataset("google-research-datasets/mbpp", "full", split=split):
+            ref[int(x["task_id"])] = x["code"]
+    tasks = {t["task_id"]: t for t in jl(WORK / "tasks.jsonl")}
+    s16 = {(r["task_id"], norm(r["code"])) for r in jl(WORK / "data" / "sample16.jsonl")}
+    out = {}
+    for arm in ARMS:
+        rows = jl(WORK / "data" / f"{arm}.jsonl")
+        with ProcessPoolExecutor(a.jobs) as ex:
+            agree = list(ex.map(_agree, [(r["code"], ref[r["task_id"]], tasks[r["task_id"]]) for r in rows], chunksize=8))
+        groups = defaultdict(list)
+        for r, ok in zip(rows, agree):
+            if ok is None:
+                continue
+            extra = (r["task_id"], norm(r["code"])) not in s16
+            groups["all"].append(ok)
+            groups["beyond sample16" if extra else "shared with sample16"].append(ok)
+        out[arm] = {g: dict(agree=sum(v), of=len(v)) for g, v in groups.items()}
+    search = jl(WORK / "search.jsonl")
+    rescued = []
+    for f in search:
+        for g in f["greens"][:1]:
+            ok = _agree((g["code"], ref[f["task_id"]], tasks[f["task_id"]]))
+            rescued.append(dict(task_id=f["task_id"], certified=f["verdict"] in (2, 3), agrees=ok))
+    out["neo4d first green per task"] = dict(
+        certified=dict(agree=sum(bool(r["agrees"]) for r in rescued if r["certified"]), of=sum(r["certified"] for r in rescued)),
+        refused=dict(agree=sum(bool(r["agrees"]) for r in rescued if not r["certified"]), of=sum(not r["certified"] for r in rescued)))
+    (WORK / "data" / "purity.json").write_text(json.dumps(out, indent=1))
+    print(json.dumps(out, indent=1))
+
+
 def cmd_train(a):
     import torch
     from datasets import Dataset
@@ -501,6 +546,19 @@ def cmd_report(a):
                 xa = [sum(g[k][1] for g in A) / len(A) for k in keys]
                 xb = [sum(g[k][1] for g in B) / len(B) for k in keys]
                 lines.append(f"- {arm} against {ref}, {bench}: {sum(xa) - sum(xb):+.2f} problems, p = {permutation_p(xa, xb):.3f}")
+    pf = WORK / "data" / "purity.json"
+    if pf.exists():
+        pu = json.loads(pf.read_text())
+        lines += ["", "Purity - training programs that behave like MBPP's reference solution on probe calls from the task's "
+                  "own tests (the references were never used to build the data):", "",
+                  "| arm | all examples | shared with sample16 | beyond sample16 |", "|---|---|---|---|"]
+        fmt = lambda d: f"{d['agree']}/{d['of']} ({100 * d['agree'] / d['of']:.1f}%)" if d and d.get("of") else "-"
+        for arm in ARMS:
+            g = pu.get(arm, {})
+            lines.append(f"| {arm} | {fmt(g.get('all'))} | {fmt(g.get('shared with sample16'))} | {fmt(g.get('beyond sample16'))} |")
+        r = pu.get("neo4d first green per task", {})
+        lines += ["", f"neo4d's first green program per rescued task: SHIP-certified {fmt(r.get('certified'))} agree with the "
+                  f"reference; refused by SHIP {fmt(r.get('refused'))}."]
     ch = sizes.get("challenge", {})
     lines += ["", f"A second check on neo4d's mutated programs (MBPP's challenge tests, where a task has them): "
               f"{ch.get('refuted', 0)} of {ch.get('checked', 0)} refuted; of those SHIP certified, "
@@ -511,7 +569,8 @@ def cmd_report(a):
 
 def main() -> int:
     ap = argparse.ArgumentParser(prog="neo4d.decisive")
-    ap.add_argument("cmd", choices=("sample", "check", "search", "datasets", "train", "generate", "evaluate", "report"))
+    ap.add_argument("cmd", choices=("sample", "check", "search", "datasets", "purity", "train", "generate", "evaluate",
+                                    "report"))
     ap.add_argument("--base", default=BASE)
     ap.add_argument("--arm", default="base", choices=("base",) + ARMS)
     ap.add_argument("--seed", type=int, default=0)
