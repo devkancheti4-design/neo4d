@@ -19,6 +19,10 @@ checker calls; check budgets 100 and 400.
     python -m neo4d.reasoning_vs_search --tasks 60 --seed 1          -> results/REASONING.md   (GPU)
     python -m neo4d.reasoning_vs_search --report                     the report again from the recorded run
                                                                      (results/data/reasoning), no GPU
+    python -m neo4d.reasoning_vs_search --recheck                    on any CPU, about a minute: the puzzles made
+                                                                     again, every recorded answer read and checked
+                                                                     again, neo4d's search run again - and compared
+                                                                     with the recorded numbers
 """
 from __future__ import annotations
 
@@ -88,7 +92,10 @@ def main() -> int:
     ap.add_argument("--domains", default="countdown,blocks")
     ap.add_argument("--reuse-latency", action="store_true", help="keep the one-at-a-time timings of the last run")
     ap.add_argument("--report", action="store_true", help="write the report from the recorded run, no GPU")
+    ap.add_argument("--recheck", action="store_true", help="redo everything but the model's generation, on a CPU")
     a = ap.parse_args()
+    if a.recheck:
+        return recheck()
     if a.report:
         import gzip
         rec = REPO / "results" / "data" / "reasoning" / "reasoning_runs.json.gz"
@@ -159,16 +166,63 @@ def main() -> int:
     return 0
 
 
+def recheck():
+    """Everything except the model's generation, again: the same puzzles (seeded), the recorded replies read and
+    checked by the domain's own checker, neo4d's search run from the recorded guesses and from the fixed start."""
+    import gzip
+    rec = json.loads(gzip.decompress((REPO / "results" / "data" / "reasoning" / "reasoning_runs.json.gz").read_bytes()))
+    res, n, seed = rec["results"], rec["tasks"], rec["seed"]
+    same = True
+    for name, D in DOMAINS.items():
+        dom = D()
+        tasks = {t["id"]: t for t in dom.tasks(n, seed)}
+        rows = res[name]
+        assert set(tasks) == {r["id"] for r in rows}, "the puzzles differ from the recorded ones"
+        got = defaultdict(int)
+        for r in rows:
+            t = tasks[r["id"]]
+            for label in ("A", "B"):
+                if f"{label}_text" in r:                     # the raw reply was kept: read it again
+                    cand = read_answer(dom, t, r[f"{label}_text"])
+                else:                                       # the first run kept the answer it read
+                    c = r[f"{label}_cand"]
+                    cand = c if c is None or isinstance(c, str) else tuple(map(tuple, c))
+                ok = cand is not None and dom.check(t, cand)[0]
+                got[label] += ok
+                if label == "B":
+                    for budget in (100, 400):
+                        got[f"B_{budget}"] += search_from(dom, t, cand, budget)[0]
+            for budget in (100, 400):
+                got[f"S_{budget}"] += search_from(dom, t, None, budget)[0]
+        want = {"A": sum(r["A_ok"] for r in rows), "B": sum(r["B_ok"] for r in rows),
+                **{f"{k}_{b}": sum(r[f"{k}_{b}"]["ok"] for r in rows) for k in ("B", "S") for b in (100, 400)}}
+        names = {"A": "A reasoning", "B": "B0 instant guess", "B_100": "B guess + search, 100 checks",
+                 "B_400": "B guess + search, 400 checks", "S_100": "S search alone, 100 checks",
+                 "S_400": "S search alone, 400 checks"}
+        print(f"\n{name} ({len(rows)} puzzles, seed {seed})")
+        for k, label in names.items():
+            mark = "same" if got[k] == want[k] else "DIFFERENT"
+            same &= got[k] == want[k]
+            print(f"  {label:32s} recorded {want[k]:2d}/{len(rows)}  now {got[k]:2d}/{len(rows)}  {mark}")
+    print("\nEvery number reproduced." if same else "\nSome numbers differ - see above.")
+    return 0 if same else 1
+
+
 def report(res, a):
     cd, bw = res["countdown"], res["blocks"]
     s4 = lambda rows, k: sum(r[k]["ok"] for r in rows)
     lines = ["# Reasoning tokens against neo4d's search", "",
-             f"**On two checkable puzzles, neo4d's search solved {s4(cd, 'S_400')}/60 (Countdown) and {s4(bw, 'S_400')}/60 "
+             f"**Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order "
+             f"of magnitude ({s4(cd, 'S_400')} vs {sum(r['A_ok'] for r in cd)} and {s4(bw, 'S_400')} vs "
+             f"{sum(r['A_ok'] for r in bw)} of 60 puzzles) at zero model tokens.** Check it in a second on any computer: "
+             "`python -m neo4d.reasoning_vs_search --recheck` (docs/REPRODUCE.md).", "",
+             f"On two checkable puzzles, neo4d's search solved {s4(cd, 'S_400')}/60 (Countdown) and {s4(bw, 'S_400')}/60 "
              f"(Blocks World) with no model tokens; the reasoning model, thinking, solved {sum(r['A_ok'] for r in cd)}/60 "
              f"and {sum(r['A_ok'] for r in bw)}/60 with {sum(r['A_tokens'] for r in cd) / len(cd):.0f} and "
              f"{sum(r['A_tokens'] for r in bw) / len(bw):.0f} tokens per problem. The model's own instant guess adds "
              f"nothing: guess + search solved {s4(cd, 'B_400')}/60 and {s4(bw, 'B_400')}/60 - on Blocks fewer than search "
-             "from a fixed start, because a wrong guess leads the search astray.**", "",
+             "from a fixed start, because a wrong guess leads the search astray. The search here is a plain beam search ranked by the "
+             "checker's partial score: no law steers it.", "",
              "What this does not show: these are small puzzles with an exact checker, where a search over one-step changes "
              "is strong; an 8B distilled reasoning model is far from the strongest reasoner; and a domain without a cheap, "
              "exact checker gives the search nothing to rank by. The claim is: where an exact checker exists, neo4d's search "

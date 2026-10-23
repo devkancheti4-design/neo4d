@@ -20,7 +20,7 @@
 \maketitle
 
 \begin{abstract}
-\textbf{Where an exact checker exists, search beats paying for reasoning tokens.} On two checkable puzzles, neo4d's
+\textbf{Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.} On two checkable puzzles, neo4d's
 model-free search solves 51 and 49 of 60 problems (Countdown, Blocks World) with no model tokens, while a reasoning
 model, DeepSeek-R1-Distill-Llama-8B thinking up to 6{,}000 tokens, solves 5 and 1 of 60 at 1{,}668 and 4{,}268 tokens
 and 2--4 minutes per problem; the model's own instant guess adds nothing, and on Blocks World it hurts, leading the
@@ -535,7 +535,10 @@ equal-budget baselines on real bugs with one small model (and matches them with 
 unchanged to domains that are not code, and makes a model useful as a cheap filter for a search it could not run
 itself. It does not make a model reason better by advising it, and it cannot create a skill no one has shown it. Next: a stronger proposer on the non-code domains, coverage-guided search inside the agent, and SWE-bench, whose agent and guide are released with the code.
 
-\paragraph{Reproducibility.} \sloppy Every number comes from a command in the repository: \texttt{neo4d local-model},
+\paragraph{Reproducibility.} \sloppy The headline is checked on any computer in under a second, with no GPU:
+\texttt{python -m neo4d.reasoning\_vs\_search --recheck} makes the puzzles again, reads and checks every recorded reply
+of the reasoning model again and runs the search again; \texttt{docs/REPRODUCE.md} gives every rerun, with the exact
+package versions. Every number comes from a command in the repository: \texttt{neo4d local-model},
 \texttt{local-agent} (with \texttt{--agent-score sonnet,haiku}), \texttt{local-hints} (with \texttt{--loop},
 \texttt{--focus}, \texttt{--search-score}), \texttt{python -m neo4d.rigor} (\texttt{--law}, \texttt{--agent},
 \texttt{--random}, \texttt{--baselines}), \texttt{python -m neo4d.core\_experiment},

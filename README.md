@@ -15,8 +15,8 @@ the system learn by itself.
 
 ## Search against reasoning tokens (`neo4d/reasoning_vs_search.py`, `results/REASONING.md`)
 
-**On checkable puzzles, neo4d's search beats a reasoning model at a tiny fraction of the cost.** DeepSeek-R1-Distill-
-Llama-8B on an NVIDIA L4, 60 problems per domain, one try:
+**Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.** DeepSeek-R1-Distill-Llama-8B on an NVIDIA L4, 60 problems per domain, one try. Check it yourself in a
+minute, no GPU: `pip install -e . && python -m neo4d.reasoning_vs_search --recheck` (`docs/REPRODUCE.md`).
 
 | | Countdown solved | Blocks World solved | model tokens per problem | seconds per problem |
 |---|---|---|---|---|

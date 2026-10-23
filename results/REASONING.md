@@ -1,6 +1,8 @@
 # Reasoning tokens against neo4d's search
 
-**On two checkable puzzles, neo4d's search solved 51/60 (Countdown) and 49/60 (Blocks World) with no model tokens; the reasoning model, thinking, solved 5/60 and 1/60 with 1668 and 4268 tokens per problem. The model's own instant guess adds nothing: guess + search solved 51/60 and 25/60 - on Blocks fewer than search from a fixed start, because a wrong guess leads the search astray.**
+**Where answers can be checked exactly, neo4d's model-free search outperforms a reasoning model by an order of magnitude (51 vs 5 and 49 vs 1 of 60 puzzles) at zero model tokens.** Check it in a second on any computer: `python -m neo4d.reasoning_vs_search --recheck` (docs/REPRODUCE.md).
+
+On two checkable puzzles, neo4d's search solved 51/60 (Countdown) and 49/60 (Blocks World) with no model tokens; the reasoning model, thinking, solved 5/60 and 1/60 with 1668 and 4268 tokens per problem. The model's own instant guess adds nothing: guess + search solved 51/60 and 25/60 - on Blocks fewer than search from a fixed start, because a wrong guess leads the search astray. The search here is a plain beam search ranked by the checker's partial score: no law steers it.
 
 What this does not show: these are small puzzles with an exact checker, where a search over one-step changes is strong; an 8B distilled reasoning model is far from the strongest reasoner; and a domain without a cheap, exact checker gives the search nothing to rank by. The claim is: where an exact checker exists, neo4d's search replaces paying for reasoning tokens. Answers are read the same way in every configuration (the domain's parser, then \boxed{...}, LaTeX operators and inline expressions); the first run's stricter reading is kept in results/data/reasoning/REASONING_first_parse.md.
 
