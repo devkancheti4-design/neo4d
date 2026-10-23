@@ -395,7 +395,7 @@ def cmd_train(a):
                                  completion=[{"role": "assistant", "content": f"```python\n{r['code']}```"}]) for r in rows])
     out = WORK / "adapters" / f"{a.arm}_s{a.seed}"
     cfg = SFTConfig(output_dir=str(out), num_train_epochs=3, per_device_train_batch_size=8, gradient_accumulation_steps=2,
-                    learning_rate=2e-4, lr_scheduler_type="cosine", warmup_ratio=0.05, logging_steps=10,
+                    learning_rate=2e-4, lr_scheduler_type="cosine", warmup_steps=0.05, logging_steps=10,
                     save_strategy="no", report_to="none", seed=a.seed, data_seed=a.seed,
                     bf16=torch.cuda.is_bf16_supported(), fp16=not torch.cuda.is_bf16_supported(), max_length=1024)
     peft = LoraConfig(r=16, lora_alpha=32, lora_dropout=0.05, target_modules="all-linear", task_type="CAUSAL_LM")
