@@ -149,7 +149,7 @@ def solve(dom, task, model, method, memory=None, calls=4, checks=400, seed=0):
     -> dict(solved, how, calls, checks)"""
     stats = defaultdict(int)
     key = dom.key(task)
-    tried, how, sol = {}, None, None
+    tried, how, sol, first = {}, None, None, None
     use_memory = method in ("core", "core-no-mutation") and memory is not None
     use_mutation = method in ("core", "core-no-memory", "search")
     if use_memory:
@@ -173,6 +173,7 @@ def solve(dom, task, model, method, memory=None, calls=4, checks=400, seed=0):
             reply = generate(model, dom.prompt(task, feedback if method != "sample" else None),
                              0.0 if k == 0 else 0.8, seed * 1000 + k, stats, predict=dom.predict)
             cand = dom.parse(task, reply)
+            first = first if first is not None else cand
             if cand is None:
                 feedback = "That answer could not be read; follow the requested format exactly."
                 continue
@@ -193,4 +194,5 @@ def solve(dom, task, model, method, memory=None, calls=4, checks=400, seed=0):
             feedback = f"Your answer {dom.render(cand)} is not right: {note}. Try again."
     if memory is not None and method in ("core", "core-no-mutation"):
         memory.learn(key, task["id"], dom.abstract(task, sol) if sol is not None else None, tried)
-    return dict(id=task["id"], solved=sol is not None, how=how, calls=stats["calls"], checks=stats["checks"])
+    return dict(id=task["id"], solved=sol is not None, how=how, calls=stats["calls"], checks=stats["checks"],
+                solution=sol, first=first if how is None else None)

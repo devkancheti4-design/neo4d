@@ -51,3 +51,13 @@ def test_memory_replays_on_a_new_task_of_the_same_shape(monkeypatch):
 def test_the_core_names_no_domain():
     src = (C.__file__ and open(C.__file__).read()).lower()
     assert "countdown" not in src and "blocks" not in src
+
+
+def test_arc_adapter_finds_a_transformation_and_scores_the_hidden_test():
+    from neo4d.domains.arc import Arc
+    d = Arc()
+    t = dict(id="t", train=[(((1, 2), (3, 4)), ((2, 1), (4, 3))), (((5, 0), (0, 6)), ((0, 5), (6, 0)))],
+             test=[(((7, 8), (9, 1)), ((8, 7), (1, 9)))])
+    r = C.solve(d, t, None, "search", checks=500)
+    assert r["solved"] and d.solves_test(t, r["solution"])
+    assert not d.solves_test(t, ())                                   # the identity does not
