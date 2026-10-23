@@ -44,3 +44,44 @@ The mutation domain, 10,000 lessons, evaluated on held-out modules; mean over 3 
 | RELATE v2 | 30% | 95.9% | **27.3%** (19.8%-32.6%) | 514 |
 | v2, the BARREN bit ignored | 30% | 96.1% | **0.9%** (0.8%-1.2%) | 1,274 |
 | trust at first sight (no law) | 30% | 96.1% | **0.6%** (0.5%-0.7%) | 1,313 |
+
+## Coverage-guided search: does it scale to large files?
+
+One fault (one neo4d can undo, caught by the tests) in a target function, placed among other functions in one file of 1, 4, 16 or 31 functions; 3 seeds x up to 31 targets. Test runs until a variant passes every test (the median over bugs; a search that has not found it after 400 runs counts as a failure).
+
+| functions in the file | search | found within the budget | test runs to the fix (median) | mean |
+|---|---|---|---|---|
+| 1 | every line, file order | 93/93 | 10 | 13.9 |
+| 1 | lines the failing tests run | 86/93 | 9.0 | 13.3 |
+| 1 | those lines, by suspicion (Ochiai) | 86/93 | 5.5 | 10.2 |
+| 4 | every line, file order | 93/93 | 57 | 58.7 |
+| 4 | lines the failing tests run | 86/93 | 9.0 | 13.3 |
+| 4 | those lines, by suspicion (Ochiai) | 86/93 | 5.5 | 10.2 |
+| 16 | every line, file order | 79/93 | 228 | 222.8 |
+| 16 | lines the failing tests run | 86/93 | 9.0 | 13.3 |
+| 16 | those lines, by suspicion (Ochiai) | 86/93 | 5.5 | 10.2 |
+| 31 | every line, file order | 39/93 | 222 | 197.6 |
+| 31 | lines the failing tests run | 86/93 | 9.0 | 13.3 |
+| 31 | those lines, by suspicion (Ochiai) | 86/93 | 5.5 | 10.2 |
+
+## Baselines at an equal budget, with seeds and statistics
+
+The 31 real QuixBugs bugs. Every method may use at most 10 model calls a bug; seeds change the sampled attempts (the first attempt is greedy). Fixed: every test passes. Intervals: 95% bootstrap over bugs of the per-bug success rate averaged over seeds. p: a paired sign-flip permutation test, neo4d against the method, on per-bug success rates.
+
+### phi4-mini
+
+| method | fixed per seed | mean | 95% interval (share of bugs) | calls per bug | neo4d minus method | p |
+|---|---|---|---|---|---|---|
+| sample-and-filter | 23, 22, 22 | 22.3 | 58%-85% | 4.8 | +0.7 bugs | 0.844 |
+| self-debugging | 20, 22, 22 | 21.3 | 55%-83% | 5.0 | +1.7 bugs | 0.517 |
+| Reflexion | 19, 23, 18 | 20.0 | 49%-78% | 5.3 | +3.0 bugs | 0.240 |
+| **neo4d loop** | 20, 25, 24 | 23.0 | 60%-87% | 4.0 |  |  |
+
+### gemma3:4b
+
+| method | fixed per seed | mean | 95% interval (share of bugs) | calls per bug | neo4d minus method | p |
+|---|---|---|---|---|---|---|
+| sample-and-filter | 16, 16, 16 | 16.0 | 34%-69% | 5.5 | +8.7 bugs | 0.004 |
+| self-debugging | 19, 18, 19 | 18.7 | 43%-76% | 4.7 | +6.0 bugs | 0.016 |
+| Reflexion | 18, 19, 19 | 18.7 | 44%-76% | 4.9 | +6.0 bugs | 0.008 |
+| **neo4d loop** | 25, 24, 25 | 24.7 | 65%-92% | 3.2 |  |  |
