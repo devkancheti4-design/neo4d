@@ -307,6 +307,7 @@ the model writes a short reflection, kept for later attempts; a reflection costs
 seeds; $p$ is a paired sign-flip permutation test of neo4d against the method.
 \begin{table}[H]
 \centering\small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llccccc}
 \toprule
 model & method & fixed (seeds 0, 1, 2) & mean & 95\% interval & calls per bug & neo4d $-$ method ($p$)\\
@@ -382,6 +383,7 @@ configuration was then frozen and run on seeds 1 and 2 (Table~\ref{tab:core}). E
 calls per task; neo4d's methods also had a budget of checker calls.
 \begin{table}[H]
 \centering\small
+\setlength{\tabcolsep}{4pt}
 \begin{tabular}{llcccc}
 \toprule
 domain, model & checks & model only (best) & \textbf{neo4d core} & search, no model & core's calls\\
