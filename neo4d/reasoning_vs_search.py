@@ -43,6 +43,72 @@ STORE = REPO / ".build" / "reasoning_runs.json"
 OUT = REPO / "results" / "REASONING.md"
 
 
+def ollama_chat(model, prompt, think, predict, url="http://127.0.0.1:11434"):
+    """One reply from an ollama model, thinking on or off (ollama keeps the thinking apart from the answer).
+    -> (answer text, thinking text, generated tokens, seconds)"""
+    import urllib.request
+    body = json.dumps({"model": model, "messages": [{"role": "user", "content": prompt}], "stream": False, "think": think,
+                       "options": {"temperature": 0.6, "top_p": 0.95, "seed": 0, "num_predict": predict,
+                                   "num_ctx": predict + 2048}}).encode()
+    for wait in (5, 15, 60, None):
+        try:
+            req = urllib.request.Request(url + "/api/chat", data=body, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=7200) as r:
+                d = json.loads(r.read())
+            m = d.get("message", {})
+            return m.get("content", ""), m.get("thinking", "") or "", d.get("eval_count", 0), d.get("total_duration", 0) / 1e9
+        except Exception:                                   # noqa: BLE001 - the server can be busy; try again
+            if wait is None:
+                return "", "", 0, 0.0
+            time.sleep(wait)
+
+
+def run_ollama(a):
+    """The same test with an ollama model: thinking on (A) and off (B0), many requests at once."""
+    from concurrent.futures import ThreadPoolExecutor
+    slug = a.ollama.replace(":", "_").replace("/", "_")
+    store = REPO / ".build" / f"reasoning_runs_{slug}.json"
+    res = {}
+    for name, D in DOMAINS.items():
+        dom = D()
+        tasks = dom.tasks(a.tasks, a.seed)
+        rows = {t["id"]: dict(id=t["id"]) for t in tasks}
+        for label, think, predict in (("A", True, a.think_tokens), ("B", False, 256)):
+            t0 = time.time()
+            with ThreadPoolExecutor(a.parallel) as ex:
+                outs = list(ex.map(lambda t: ollama_chat(a.ollama, dom.prompt(t), think, predict), tasks))
+            secs = time.time() - t0
+            for t, (answer, thinking, n, _) in zip(tasks, outs):
+                cand = read_answer(dom, t, answer)
+                r = rows[t["id"]]
+                r.update({f"{label}_text": answer, f"{label}_thinking": thinking, f"{label}_tokens": n,
+                          f"{label}_closed": bool(answer.strip()) or not think,
+                          f"{label}_cand": cand if cand is None or isinstance(cand, str) else list(cand),
+                          f"{label}_ok": cand is not None and dom.check(t, cand)[0]})
+            res[f"{name}_{label}_batch_seconds"] = round(secs, 1)
+            print(f"{name} {label}: {sum(r[f'{label}_ok'] for r in rows.values())}/{len(rows)} in {secs:.0f} s", flush=True)
+            store.write_text(json.dumps(dict(model=a.ollama, tasks=a.tasks, seed=a.seed, results={**res, name: list(rows.values())}), indent=1))
+        for label, think, predict in (("A", True, a.think_tokens), ("B", False, 256)):
+            res[f"{name}_{label}_seconds_each"] = [round(ollama_chat(a.ollama, dom.prompt(t), think, predict)[3], 1)
+                                                   for t in tasks[:a.latency]]
+        for budget in (100, 400):
+            for t in tasks:
+                r = rows[t["id"]]
+                cand = r["B_cand"] if r["B_cand"] is None or isinstance(r["B_cand"], str) else tuple(map(tuple, r["B_cand"]))
+                t0 = time.time()
+                ok, how, checks = search_from(dom, t, cand, budget)
+                r[f"B_{budget}"] = dict(ok=ok, how=how, checks=checks, seconds=round(time.time() - t0, 3))
+                ok, how, checks = search_from(dom, t, None, budget)
+                r[f"S_{budget}"] = dict(ok=ok, checks=checks)
+        res[name] = list(rows.values())
+        store.write_text(json.dumps(dict(model=a.ollama, tasks=a.tasks, seed=a.seed, results=res), indent=1))
+    global OUT
+    OUT = REPO / "results" / f"REASONING_{slug}.md"
+    a.model = a.ollama
+    report(res, a)
+    return 0
+
+
 def answer_part(text):
     """What follows the reasoning: the text after </think>, or all of it when the model never closed the block."""
     return text.split("</think>", 1)[1] if "</think>" in text else text
@@ -93,7 +159,12 @@ def main() -> int:
     ap.add_argument("--reuse-latency", action="store_true", help="keep the one-at-a-time timings of the last run")
     ap.add_argument("--report", action="store_true", help="write the report from the recorded run, no GPU")
     ap.add_argument("--recheck", action="store_true", help="redo everything but the model's generation, on a CPU")
+    ap.add_argument("--ollama", help="an ollama reasoning model instead of vLLM, e.g. qwen3.8:27b-mtp-q4_K_M")
+    ap.add_argument("--think-tokens", type=int, default=6000, help="the most a model may think (A)")
+    ap.add_argument("--parallel", type=int, default=8, help="ollama requests at once")
     a = ap.parse_args()
+    if a.ollama:
+        return run_ollama(a)
     if a.recheck:
         return recheck()
     if a.report:
@@ -224,13 +295,14 @@ def report(res, a):
              "from a fixed start, because a wrong guess leads the search astray. The search here is a plain beam search ranked by the "
              "checker's partial score: no law steers it.", "",
              "What this does not show: these are small puzzles with an exact checker, where a search over one-step changes "
-             "is strong; an 8B distilled reasoning model is far from the strongest reasoner; and a domain without a cheap, "
+             "is strong; " + ("an 8B distilled reasoning model is far from the strongest reasoner; " if "R1-Distill" in a.model else
+                              f"one model ({a.model}) and one seed; ") + "and a domain without a cheap, "
              "exact checker gives the search nothing to rank by. The claim is: where an exact checker exists, neo4d's search "
              "replaces paying for reasoning tokens. Answers are read the same way in every configuration (the domain's "
              "parser, then \\boxed{...}, LaTeX operators and inline expressions); the first run's stricter reading is kept "
              "in results/data/reasoning/REASONING_first_parse.md.", "",
              f"Generated by `neo4d/reasoning_vs_search.py`. Model `{a.model}` (vLLM, NVIDIA L4); {a.tasks} tasks per "
-             f"domain, seed {a.seed}; temperature 0.6, seed 0, one try. A: the model reasons (up to 6,000 tokens). "
+             f"domain, seed {a.seed}; temperature 0.6, seed 0, one try. A: the model reasons (up to {getattr(a, 'think_tokens', 6000):,} tokens). "
              "B: reasoning off (an empty <think></think> pre-filled), an instant guess, then neo4d's search from it. B0: "
              "the guess alone. S: neo4d's search alone, no model.", ""]
     for name in DOMAINS:
@@ -256,7 +328,7 @@ def report(res, a):
                          f"{sum(x['checks'] for x in s) / n:.0f} |")
         both = [(r["A_ok"], r["B_400"]["ok"]) for r in rows]
         lines += ["", f"A solved and B (400) did not: {sum(x and not y for x, y in both)}; B solved and A did not: "
-                  f"{sum(y and not x for x, y in both)}. A's reasoning was cut off (no </think> within 6,000 tokens) on "
+                  f"{sum(y and not x for x, y in both)}. A's reasoning was cut off (no answer within {getattr(a, 'think_tokens', 6000):,} tokens) on "
                   f"{sum(not r['A_closed'] for r in rows)} problems.", ""]
     OUT.write_text("\n".join(lines) + "\n")
     print("\n".join(lines))
