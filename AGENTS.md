@@ -74,8 +74,25 @@ commands.
 | ablations, random control, coverage | `python -m neo4d.rigor --law`, `--agent`, `--random`, `--coverage` | 20 min - 1.5 h each |
 | baselines with seeds and statistics | `python -m neo4d.rigor --baselines phi4-mini,gemma3:4b` | ~4 h |
 | the law: judged, proved | `neo4d judge`, `neo4d relate-v2`, `neo4d kit-proof --cbmc` | minutes |
+| reasoning tokens against neo4d's search (R1-Distill-Llama-8B) | `python -m neo4d.reasoning_vs_search --tasks 60 --seed 1` (GPU); `--report` remakes `results/REASONING.md` from `results/data/reasoning` | ~1.5 h on an L4; seconds |
+| public repositories, Claude as the agent | `python -m neo4d.public_agent --fetch`, then `--agent-score sonnet,haiku` (replays the traces in `results/data/public_runs`) | ~10 min |
+| public repositories, an ollama model | `python -m neo4d.public_agent --model qwen2.5-coder:32b --solver "model alone"` and `--solver "neo4d + model"`, then `--report qwen2.5-coder:32b` | hours on a GPU |
+| training on neo4d's data (the decisive test) | `scripts/run_decisive.sh`, `scripts/run_decisive_free.sh` (GPU); without a GPU: `python -m neo4d.decisive restore`, then `report`, `decontam`, `report_free` | ~2 h each on an L4; seconds |
+| SWE-bench Lite smoke, design and stopped pilot | `docs/SWEBENCH.md`; the runs are in `results/data/swebench_2026-10-22/runs.tar.gz`, branch `swebench-pilot-2026-10-22` | hours |
 
-## 5. State of the work (2026-10-22)
+## 5. State of the work (2026-10-23)
+
+**Finished 2026-10-22/23, on an E2E NVIDIA L4 and with Claude subagents:**
+- `results/REASONING.md`: neo4d's search alone solves Countdown 51/60 and Blocks 49/60; DeepSeek-R1-Distill-Llama-8B
+  reasoning solves 5/60 and 1/60 at 1,668 and 4,268 tokens per problem; the model's instant guess adds nothing.
+- `results/PUBLIC_AGENT.md`: 98 tasks on boltons, click and toolz; Claude Sonnet and Haiku need the model on 84 of 98
+  tasks with neo4d (98 alone) at the same accepted work. The Qwen2.5-Coder-32B run (exact token counts) was queued on
+  the node after the decisive test's run 2.
+- `results/DECISIVE.md`: training on neo4d's verified programs does not beat training on sampled ones (run 1, three
+  seeds, decontaminated). Run 2 (neo4d with freedom on the 117 hardest tasks against 256 samples): data done, training
+  in progress when this was written - its table is appended by `report_free`.
+- `results/SWEBENCH_PILOT.md`: smoke, design v0/v1, two pilot seeds - stopped by the owner, a record not a result.
+
 
 **Finished, in `results/`:** the bug stream; agent work for phi4-mini, the assistant, Haiku and Sonnet (the Sonnet /
 Haiku scores reproduce exactly since plan ties are ordered); real bugs with evidence (the first design), Haiku on real
@@ -140,6 +157,17 @@ owner's name.
     `training/` or logs.
 
 ## 7. Pitfalls already met (and fixed)
+
+- E2E: the account runs one GPU node at a time; powering a node off does not stop billing (delete it); L4 stock comes
+  and goes. Some networks reset SSH on port 22 - the node's sshd also listens on 443 (`/etc/ssh/sshd_config.d`).
+- The node's driver (570) runs CUDA 12.8: PyTorch 2.13+/vLLM 0.32 wheels need CUDA 13. Use vLLM 0.11.0 with
+  transformers 4.57.1 and datasets < 5, and a CUDA 12.8 PyTorch for training; transformers 5 has no `warmup_ratio`
+  (use `warmup_steps` as a fraction). `results/data/decisive/versions.txt` has the exact versions.
+- swebench 5 dropped the per-project test commands the SWE-bench agent reads: run the agent with swebench 4.1.0 and score
+  with 5.0.2 in a second environment, against `SWE-bench/SWE-bench_Lite`.
+- MBPP repeats problems under other ids: decontaminate MBPP+ (`python -m neo4d.decisive decontam`).
+- `pkill -f PATTERN` over SSH can kill the SSH session's own shell when its command line contains PATTERN: kill from a
+  script file.
 
 - macOS temp folders resolve to `/private/var/...`: resolve paths before comparing (`Sandbox` does).
 - The local model server answers HTTP 500 under concurrent load: every call retries with backoff; run at most about

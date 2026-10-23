@@ -13,6 +13,45 @@ the system learn by itself.
 
 ---
 
+## Search against reasoning tokens (`neo4d/reasoning_vs_search.py`, `results/REASONING.md`)
+
+**On checkable puzzles, neo4d's search beats a reasoning model at a tiny fraction of the cost.** DeepSeek-R1-Distill-
+Llama-8B on an NVIDIA L4, 60 problems per domain, one try:
+
+| | Countdown solved | Blocks World solved | model tokens per problem | seconds per problem |
+|---|---|---|---|---|
+| the model reasoning (`<think>`, up to 6,000 tokens) | 5/60 | 1/60 | 1,668 / 4,268 | 127 / 227 |
+| the model's instant guess (thinking off) | 3/60 | 1/60 | 149 / 226 | 9 / 16 |
+| instant guess + neo4d's search (400 checks) | 51/60 | 25/60 | 149 / 226 | 9 / 16, + 0.01 search |
+| **neo4d's search alone, no model** | **51/60** | **49/60** | **0** | **about 0.01** |
+
+The model's own guess adds nothing - on Blocks a wrong guess leads the search astray. Limits: small puzzles with an
+exact checker, an 8B distilled reasoner; the claim is that where an exact checker exists, search replaces paying for
+reasoning tokens - not that it replaces reasoning in general.
+
+## Fewer frontier-model calls on public repositories (`neo4d/public_agent.py`, `results/PUBLIC_AGENT.md`)
+
+98 everyday agent tasks (rename, add a parameter, count, who calls, fix a bug) on boltons, click and toolz, each
+accepted only by the project's own test suite. Claude as the agent, alone and with neo4d replaying its learned plans:
+
+| | accepted | tasks the model was needed for | model actions |
+|---|---|---|---|
+| Claude Sonnet alone / with neo4d | 94/98 / **94/98** | 98 / **84** | 576 / **517** (-10%) |
+| Claude Haiku alone / with neo4d | 93/98 / **93/98** | 98 / **84** | 563 / **503** (-11%) |
+
+The same accepted work with 14% fewer tasks needing the model; the savings come from work that recurs.
+
+## Negative: neo4d's verified programs as training data (`neo4d/decisive.py`, `results/DECISIVE.md`)
+
+Qwen2.5-Coder-0.5B trained (LoRA, 3 seeds) on MBPP programs that passed their tasks' tests - sampled, or sampled plus
+neo4d's mutated near-misses - and scored on HumanEval+ and MBPP+: **no arm beats another** once MBPP+'s near-duplicates
+of training tasks are removed; unfiltered mutated programs are the least often right (62% behave like the reference,
+83% after the SHIP law). neo4d's data does not make better training data than plain sampling.
+
+## SWE-bench Lite: a stopped pilot (`results/SWEBENCH_PILOT.md`)
+
+2/50 resolved alone, 3/50 with neo4d over two seeds - a record, not a result.
+
 ## What it does, measured
 
 | | static fluidnet (ring router) | neo4d (4D) |
