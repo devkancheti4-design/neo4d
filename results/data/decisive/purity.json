@@ -1,0 +1,64 @@
+{
+ "sample16": {
+  "all": {
+   "agree": 895,
+   "of": 1025
+  },
+  "shared with sample16": {
+   "agree": 895,
+   "of": 1025
+  }
+ },
+ "sample64": {
+  "all": {
+   "agree": 1086,
+   "of": 1278
+  },
+  "shared with sample16": {
+   "agree": 895,
+   "of": 1025
+  },
+  "beyond sample16": {
+   "agree": 191,
+   "of": 253
+  }
+ },
+ "neo4d": {
+  "all": {
+   "agree": 916,
+   "of": 1059
+  },
+  "shared with sample16": {
+   "agree": 895,
+   "of": 1025
+  },
+  "beyond sample16": {
+   "agree": 21,
+   "of": 34
+  }
+ },
+ "neo4d_ship": {
+  "all": {
+   "agree": 905,
+   "of": 1037
+  },
+  "shared with sample16": {
+   "agree": 895,
+   "of": 1025
+  },
+  "beyond sample16": {
+   "agree": 10,
+   "of": 12
+  }
+ },
+ "neo4d first green per task": {
+  "certified": {
+   "agree": 10,
+   "of": 12
+  },
+  "refused": {
+   "agree": 1,
+   "of": 4
+  }
+ }
+}

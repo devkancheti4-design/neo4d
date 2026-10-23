@@ -1,0 +1,16 @@
+Fri Oct 23 05:07:55 AM UTC 2026
+NVIDIA L4, 570.133.20
+ba43d00ad18fdbe554035ccd5aa1acbcaad5ab44
+== vllm env
+datasets==4.8.5
+evalplus==0.3.1
+torch==2.8.0
+transformers==4.57.1
+vllm==0.11.0
+== train env
+accelerate==1.15.0
+datasets==5.1.0
+peft==0.21.2
+torch==2.8.0+cu128
+transformers==5.20.2
+trl==1.16.0

@@ -1,0 +1,26 @@
+{
+ "sample256": {
+  "examples": 1326,
+  "tasks": 379,
+  "added": 40,
+  "added_tasks": 22
+ },
+ "neo4d_free": {
+  "examples": 1311,
+  "tasks": 368,
+  "added": 25,
+  "added_tasks": 11
+ },
+ "neo4d_free_ship": {
+  "examples": 1295,
+  "tasks": 366,
+  "added": 9,
+  "added_tasks": 9
+ },
+ "sample64": {
+  "examples": 1286,
+  "tasks": 357,
+  "added": 0,
+  "added_tasks": 0
+ }
+}

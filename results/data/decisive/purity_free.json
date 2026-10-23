@@ -1,0 +1,24 @@
+{
+ "sample256": {
+  "agree": 30,
+  "of": 40
+ },
+ "neo4d_free": {
+  "agree": 14,
+  "of": 25
+ },
+ "neo4d_free_ship": {
+  "agree": 6,
+  "of": 9
+ },
+ "neo4d_free first green per task": {
+  "certified": {
+   "agree": 6,
+   "of": 9
+  },
+  "refused": {
+   "agree": 0,
+   "of": 2
+  }
+ }
+}

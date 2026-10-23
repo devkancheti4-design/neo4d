@@ -1,0 +1,21 @@
+{
+ "sizes": {
+  "sample16": {
+   "examples": 1031,
+   "tasks": 303
+  },
+  "sample64": {
+   "examples": 1286,
+   "tasks": 357
+  },
+  "neo4d": {
+   "examples": 1065,
+   "tasks": 319
+  },
+  "neo4d_ship": {
+   "examples": 1043,
+   "tasks": 315
+  }
+ },
+ "challenge": {}
+}
