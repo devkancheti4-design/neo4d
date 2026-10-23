@@ -89,8 +89,8 @@ commands.
   tasks with neo4d (98 alone) at the same accepted work. The Qwen2.5-Coder-32B run (exact token counts) was queued on
   the node after the decisive test's run 2.
 - `results/DECISIVE.md`: training on neo4d's verified programs does not beat training on sampled ones (run 1, three
-  seeds, decontaminated). Run 2 (neo4d with freedom on the 117 hardest tasks against 256 samples): data done, training
-  in progress when this was written - its table is appended by `report_free`.
+  seeds, decontaminated). Run 2 (neo4d with freedom on the 117 hardest tasks against 256 samples, designed after run
+  1): unfiltered mutated programs hurt; SHIP-certified ones matched 4x sampling on clean MBPP+ but lost on HumanEval+.
 - `results/SWEBENCH_PILOT.md`: smoke, design v0/v1, two pilot seeds - stopped by the owner, a record not a result.
 
 

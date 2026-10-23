@@ -34,6 +34,34 @@ neo4d's first green program per rescued task: SHIP-certified 10/12 (83.3%) agree
 
 A second check on neo4d's mutated programs (MBPP's challenge tests, where a task has them): 0 of 0 refuted; of those SHIP certified, 0 of 0.
 
+## Run 2 - neo4d with freedom, on the tasks 64 samples missed
+
+Designed after run 1 (both are reported). 117 tasks no sample of 64 solved. neo4d: the closest misses of all 64 samples first, two levels of single-token search (a variant passing more asserts is mutated again), up to 2000 runs of the asserts per task, PICK ordering, SHIP certifying; no model call. Sampling: 192 more samples per task (256 in all).
+
+- neo4d: 11 tasks with a green program (1 needing two levels), 9 certified by SHIP, in 19918 runs of the asserts and 0 model calls.
+- sampling: 22 tasks solved by 22464 more samples (22464 model generations and as many runs of the asserts).
+
+| arm | examples | added beyond sample64 (tasks) | added programs like the reference | HumanEval+ (per seed) | mean | MBPP+ (per seed) | mean |
+|---|---|---|---|---|---|---|---|
+| base | 0 | 0 (0) | - | 91 | 91.0 (55.5%) | 96 | 96.0 (42.9%) |
+| sample64 | 1286 | 0 (0) | - | 99 / 92 / 92 | 94.3 (57.5%) | 116 / 119 / 117 | 117.3 (52.4%) |
+| sample256 | 1326 | 40 (22) | 30/40 (75%) | 93 / 91 / 95 | 93.0 (56.7%) | 121 / 119 / 121 | 120.3 (53.7%) |
+| neo4d_free | 1311 | 25 (11) | 14/25 (56%) | 89 / 89 / 87 | 88.3 (53.9%) | 115 / 112 / 117 | 114.7 (51.2%) |
+| neo4d_free_ship | 1295 | 9 (9) | 6/9 (67%) | 89 / 91 / 88 | 89.3 (54.5%) | 118 / 115 / 123 | 118.7 (53.0%) |
+
+Paired permutation tests per problem (pass rates averaged over seeds):
+
+- neo4d_free against sample64, humaneval: -6.00 problems, p = 0.033
+- neo4d_free against sample64, mbpp: -2.67 problems, p = 0.249
+- neo4d_free against sample256, humaneval: -4.67 problems, p = 0.053
+- neo4d_free against sample256, mbpp: -5.67 problems, p = 0.007
+- neo4d_free_ship against sample64, humaneval: -5.00 problems, p = 0.031
+- neo4d_free_ship against sample64, mbpp: +1.33 problems, p = 0.502
+- neo4d_free_ship against sample256, humaneval: -3.67 problems, p = 0.162
+- neo4d_free_ship against sample256, mbpp: -1.67 problems, p = 0.446
+
+neo4d's first green program per task, against MBPP's reference: SHIP-certified 6/9 (67%); refused by SHIP 0/2 (0%).
+
 ## MBPP+ without near-duplicates of the data tasks
 
 No data task shares an id with a held-out problem, but MBPP repeats some problems under other ids: 32 held-out problems are at least 90% textually similar to a data task, 83 at least 80% (`python -m neo4d.decisive decontam`). Every arm again, on the problems below each threshold (MBPP+ solved, per seed):
@@ -47,15 +75,18 @@ Below 0.9 similarity: 192 problems.
 | sample64 | 98 / 101 / 100 | 99.7 (51.9%) |
 | neo4d | 103 / 94 / 93 | 96.7 (50.3%) |
 | neo4d_ship | 100 / 98 / 95 | 97.7 (50.9%) |
-| sample256 | 103 | 103.0 (53.6%) |
-| neo4d_free | 99 | 99.0 (51.6%) |
+| sample256 | 103 / 101 / 103 | 102.3 (53.3%) |
+| neo4d_free | 99 / 94 / 98 | 97.0 (50.5%) |
+| neo4d_free_ship | 102 / 99 / 105 | 102.0 (53.1%) |
 
 - neo4d against sample16: -2.33 problems, p = 0.320
 - neo4d against sample64: -3.00 problems, p = 0.323
 - neo4d_ship against sample16: -1.33 problems, p = 0.462
 - neo4d_ship against sample64: -2.00 problems, p = 0.513
-- neo4d_free against sample64: -0.67 problems, p = 0.903
-- neo4d_free against sample256: -4.00 problems, p = 0.291
+- neo4d_free against sample64: -2.67 problems, p = 0.257
+- neo4d_free against sample256: -5.33 problems, p = 0.009
+- neo4d_free_ship against sample64: +2.33 problems, p = 0.201
+- neo4d_free_ship against sample256: -0.33 problems, p = 0.910
 
 Below 0.8 similarity: 141 problems.
 
@@ -66,12 +97,15 @@ Below 0.8 similarity: 141 problems.
 | sample64 | 70 / 70 / 71 | 70.3 (49.9%) |
 | neo4d | 75 / 66 / 67 | 69.3 (49.2%) |
 | neo4d_ship | 73 / 73 / 69 | 71.7 (50.8%) |
-| sample256 | 72 | 72.0 (51.1%) |
-| neo4d_free | 71 | 71.0 (50.4%) |
+| sample256 | 72 / 73 / 74 | 73.0 (51.8%) |
+| neo4d_free | 71 / 69 / 71 | 70.3 (49.9%) |
+| neo4d_free_ship | 73 / 72 / 77 | 74.0 (52.5%) |
 
 - neo4d against sample16: -3.67 problems, p = 0.052
 - neo4d against sample64: -1.00 problems, p = 0.737
 - neo4d_ship against sample16: -1.33 problems, p = 0.491
 - neo4d_ship against sample64: +1.33 problems, p = 0.531
-- neo4d_free against sample64: +0.67 problems, p = 0.646
-- neo4d_free against sample256: -1.00 problems, p = 1.000
+- neo4d_free against sample64: +0.00 problems, p = 0.952
+- neo4d_free against sample256: -2.67 problems, p = 0.137
+- neo4d_free_ship against sample64: +3.67 problems, p = 0.008
+- neo4d_free_ship against sample256: +1.00 problems, p = 0.577

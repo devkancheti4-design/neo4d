@@ -44,9 +44,13 @@ The same accepted work with 14% fewer tasks needing the model; the savings come 
 ## Negative: neo4d's verified programs as training data (`neo4d/decisive.py`, `results/DECISIVE.md`)
 
 Qwen2.5-Coder-0.5B trained (LoRA, 3 seeds) on MBPP programs that passed their tasks' tests - sampled, or sampled plus
-neo4d's mutated near-misses - and scored on HumanEval+ and MBPP+: **no arm beats another** once MBPP+'s near-duplicates
-of training tasks are removed; unfiltered mutated programs are the least often right (62% behave like the reference,
-83% after the SHIP law). neo4d's data does not make better training data than plain sampling.
+neo4d's mutated near-misses - and scored on HumanEval+ and MBPP+ (decontaminated: MBPP repeats problems under other ids).
+Run 1: **no arm beats another**. Run 2 (neo4d given freedom on the 117 hardest tasks, against 4x sampling; designed
+after run 1): **unfiltered mutated programs hurt** (-5.3 MBPP+ problems against 4x sampling, p = 0.009); the 9 programs
+the SHIP law certified matched 4x sampling on clean MBPP+ with no model call (74.0 against 73.0; +3.7 over the 64-sample
+arm, p = 0.008, not significant after correcting for the ~16 comparisons) but were worse on HumanEval+ (-5.0, p = 0.031).
+Mutated programs are less often right (56-62% behave like the reference; 67-83% after SHIP). No consistent gain from
+neo4d's data; SHIP's filter is what keeps it from doing harm.
 
 ## SWE-bench Lite: a stopped pilot (`results/SWEBENCH_PILOT.md`)
 
