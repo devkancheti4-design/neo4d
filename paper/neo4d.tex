@@ -35,11 +35,15 @@ with three tries) and completes 47.1\% of 85 multi-step agent tasks (25.9\% alon
 fewer calls than retrying. Sonnet and Haiku keep their accuracy (85/85, 84/85) while neo4d takes 32\% and 40\% of the
 tasks off them; a replayed plan takes 0.59\,s against 20--36\,s for a model. With Haiku only choosing which branches
 to explore, neo4d's search fixes 17 hard two-fault bugs where a blind search fixes 14 and a random filter 12.0 on
-average, with 60\% fewer test runs. On real bugs, a loop in which neo4d mutates each of the model's attempts fixes as
-many as the best equal-budget baseline (sample-and-filter; 22.5 of 31 for phi4-mini over two seeds) with 12--20\%
-fewer model calls, but not significantly more. We report equally plainly what failed: evidence handed to a small
-model as a paragraph made it worse, marks on suspect lines helped one model and hurt another, and nothing helped on
-bugs a strong model already solves. neo4d adds power by doing work and remembering it, not by advising.
+average, with 60\% fewer test runs. On real bugs at an equal budget over three seeds, a loop in which neo4d mutates
+each of the model's attempts fixes 24.7 of 31 with gemma3:4b against 16.0--18.7 for sample-and-filter, self-debugging
+and Reflexion ($p \le 0.016$) with about 35\% fewer calls; with phi4-mini it leads (23.0 against 20.0--22.3) without a
+significant difference. On two domains that are not code---a numbers puzzle and block-stacking plans---the same core,
+unchanged, lifts both small models far above their own methods (Countdown: from 0 to 26--31 of 40), but its search
+alone, with no model, does as well or better: there the small models' guesses are worse starts than a neutral one. We
+report equally plainly what failed: evidence handed to a small model as a paragraph made it worse, marks on suspect
+lines helped one model and hurt another, and nothing helped on problems a strong model already solves. neo4d adds
+power by doing work and remembering it, not by advising.
 \end{abstract}
 
 \section{Introduction}
@@ -62,13 +66,16 @@ have proved barren.
   barren patterns, and what is \emph{not} proved (\S\ref{sec:law}). Under a noisy teacher it keeps 58.4\% precision
   where trusting at first sight keeps 0.9\% and the same law without its barren rule 1.7\%.
   \item \textbf{Guess close, search exact.} A model's attempt need only land within one token of a fix: neo4d's
-  neighbourhood search and the tests do the rest. At an equal budget it matches the best baseline's fixes with fewer
-  model calls; the gain in fixes is not significant (\S\ref{sec:loop}).
+  neighbourhood search and the tests do the rest. At an equal budget over three seeds it beats sample-and-filter,
+  self-debugging and Reflexion significantly with gemma3:4b and leads without significance with phi4-mini, with
+  fewer calls for both (\S\ref{sec:loop}).
   \item \textbf{Plans that bypass the model.} Verified tool traces become placeholder macros, matched by the task's
   phrasing with names removed, replayed and verified in 0.59\,s. They double a small model on agent work and take a
   third to two fifths of the work off Haiku and Sonnet (\S\ref{sec:agent}).
   \item \textbf{A model as a filter.} Inverting the roles---neo4d generates and tests, a model only picks branches---
   improves a search and cuts its cost (\S\ref{sec:search}).
+  \item \textbf{A domain-free core.} The loop, the search, memory and the law in one file that names no domain; two
+  small adapters carry it to a numbers puzzle and to planning (\S\ref{sec:core}).
   \item \textbf{Negative results}, reported with the same care (\S\ref{sec:negative}), and every run released.
 \end{enumerate}
 
@@ -207,6 +214,9 @@ build and run this study) answered a sample under a handicap (two rounds of acti
   \item \textbf{Hard bugs} (29): each correct program obfuscated (hash-named variables, no docstrings), its function
   renamed to an opaque name, and broken by two faults on two lines, each fault alone failing the tests, no single
   change fixing the pair. 18 are reachable by neo4d's operators; 11 contain a fault outside them.
+  \item \textbf{Not code} (40 tasks per seed, seeds 1 and 2): \emph{Countdown}---reach a target with four given numbers
+  and $+\,-\,\times\,\div$, checked by exact evaluation---and \emph{Blocks world}---restack 3--5 named blocks into a goal,
+  checked by a simulator. Both are generated; the checker says right or wrong and how close, never the answer.
 \end{itemize}
 
 \section{Results}
@@ -290,30 +300,35 @@ gemma3:4b & 18 & 151 & 24 & 98\\
 \end{table}
 
 \paragraph{Against equal-budget baselines, with seeds.} We then gave every method at most ten model calls per bug
-and ran seeds: \emph{sample-and-filter} (independent tries, the first that passes~\cite{alphacode}),
+and ran three seeds: \emph{sample-and-filter} (independent tries, the first that passes~\cite{alphacode}),
 \emph{self-debugging}~\cite{chen2024} (the test-feedback loop), \emph{Reflexion}~\cite{reflexion} (after a failure
 the model writes a short reflection, kept for later attempts; a reflection costs a call) and the neo4d loop
 (Table~\ref{tab:baselines}). The interval is a 95\% bootstrap over bugs of the per-bug success rate averaged over
 seeds; $p$ is a paired sign-flip permutation test of neo4d against the method.
 \begin{table}[H]
 \centering\small
-\begin{tabular}{lccccc}
+\begin{tabular}{llccccc}
 \toprule
-phi4-mini, 31 real bugs & fixed (seeds 0, 1) & mean & 95\% interval & calls per seed & neo4d $-$ method ($p$)\\
+model & method & fixed (seeds 0, 1, 2) & mean & 95\% interval & calls per bug & neo4d $-$ method ($p$)\\
 \midrule
-sample-and-filter & 23, 22 & 22.5 & 58--87\% & 146 & $+0.0$ (1.00)\\
-self-debugging & 20, 22 & 21.0 & 53--82\% & 160 & $+1.5$ (0.64)\\
-Reflexion & 19, 23 & 21.0 & 53--82\% & 158 & $+1.5$ (0.67)\\
-\textbf{neo4d loop} & 20, 25 & 22.5 & 58--85\% & \textbf{128} & --\\
+phi4-mini & sample-and-filter & 23, 22, 22 & 22.3 & 58--85\% & 4.8 & $+0.7$ (0.84)\\
+ & self-debugging & 20, 22, 22 & 21.3 & 55--83\% & 5.0 & $+1.7$ (0.52)\\
+ & Reflexion & 19, 23, 18 & 20.0 & 49--78\% & 5.3 & $+3.0$ (0.24)\\
+ & \textbf{neo4d loop} & 20, 25, 24 & \textbf{23.0} & 60--87\% & \textbf{4.0} & --\\
+\midrule
+gemma3:4b & sample-and-filter & 16, 16, 16 & 16.0 & 34--69\% & 5.5 & $+8.7$ (0.004)\\
+ & self-debugging & 19, 18, 19 & 18.7 & 43--76\% & 4.7 & $+6.0$ (0.016)\\
+ & Reflexion & 18, 19, 19 & 18.7 & 44--76\% & 4.9 & $+6.0$ (0.008)\\
+ & \textbf{neo4d loop} & 25, 24, 25 & \textbf{24.7} & 65--92\% & \textbf{3.2} & --\\
 \bottomrule
 \end{tabular}
-\caption{Every method at most ten model calls per bug. neo4d fixes as many as the best baseline with 12--20\% fewer
-calls; no difference in fixes is significant. A third seed for phi4-mini and three for gemma3:4b were running when
-this version was written and will be added in the next.}
+\caption{Every method at most ten model calls per bug, 31 real bugs. With gemma3:4b the neo4d loop fixes six to nine
+more bugs than every baseline, significantly, with about a third fewer calls; with phi4-mini it leads without a
+significant difference, with a fifth fewer calls.}
 \label{tab:baselines}
 \end{table}
-The single-run advantage in Table~\ref{tab:loop} was against self-debugging; against the strongest baseline at an equal
-budget, neo4d's gain is in calls, not in fixes.
+Over three seeds and against the strongest baselines, the single-run gain in Table~\ref{tab:loop} holds for gemma3:4b
+and shrinks to fewer calls for phi4-mini.
 
 \subsection{A model as a filter for neo4d's search}
 \label{sec:search}
@@ -358,6 +373,40 @@ gemma3:4b, marks on suspect lines & 13 & 14 & 97\\
 \label{tab:attention}
 \end{table}
 
+\subsection{The same core on domains that are not code}
+\label{sec:core}
+The loop, the search, memory and the RELATE v2 law live in one file that names no domain (a test checks it); a domain
+supplies only how to ask, read, check, vary and abstract. Two design runs (recorded in the repository) changed the
+puzzle sizes, the prompts (the same for every method), the checker's partial score and the search depth; the
+configuration was then frozen and run on seeds 1 and 2 (Table~\ref{tab:core}). Every method had at most four model
+calls per task; neo4d's methods also had a budget of checker calls.
+\begin{table}[H]
+\centering\small
+\begin{tabular}{llcccc}
+\toprule
+domain, model & checks & model only (best) & \textbf{neo4d core} & search, no model & core's calls\\
+\midrule
+Countdown, phi4-mini & 100 & 0.0 & \textbf{8.5} & 29.0 & 3.6\\
+ & 400 & 0.0 & \textbf{31.0} & 33.5 & 2.1\\
+Countdown, gemma3:4b & 100 & 0.0 & \textbf{6.5} & 29.0 & 3.5\\
+ & 400 & 0.0 & \textbf{26.0} & 33.5 & 2.0\\
+Blocks, phi4-mini & 100 & 4.0 & 3.0 & 29.5 & 3.7\\
+ & 400 & 4.0 & 7.5 & 31.5 & 3.5\\
+Blocks, gemma3:4b & 100 & 10.0 & 12.0 & 29.5 & 2.9\\
+ & 400 & 10.0 & \textbf{23.5} & 31.5 & 2.0\\
+\bottomrule
+\end{tabular}
+\caption{Solved of 40 per seed, mean over two seeds. The core lifts the models far above their own methods
+(significantly in the bold rows, $p<0.001$), but search alone, with no model, does as well or better in every row.}
+\label{tab:core}
+\end{table}
+Neither 4B model solved a single Countdown puzzle on its own, with one try, with four, or with feedback; with the core
+they solved up to 31 of 40. But a neutral start beats their guesses: their arithmetic is wrong and their plans break
+the rules, so search spent near them is search wasted. Memory solved some tasks with no model call (up to 12.5 of 40
+for gemma3:4b in Blocks), but removing it, or the law, changed little: the checkers are exact, so no lesson was wrong.
+The core carries across domains unchanged; whether it raises a model there depends on the model landing close, which
+these did not.
+
 \section{What did not work}
 \label{sec:negative}
 \begin{itemize}
@@ -365,9 +414,10 @@ gemma3:4b, marks on suspect lines & 13 & 14 & 97\\
   tries, against 20 without it; an exchange of three rounds with that evidence reached 18. A small model's attention
   is diluted by text it must weigh.
   \item \textbf{Marks on suspect lines.} Helped phi4-mini's first try, hurt gemma3:4b and phi4-mini's retries.
-  \item \textbf{More fixes from the loop.} Against sample-and-filter at an equal budget, the neo4d loop fixes the same
-  number of real bugs (it saves calls); its single-run win over self-debugging did not survive seeds and a stronger
-  baseline.
+  \item \textbf{More fixes from the loop, for phi4-mini.} Over three seeds its lead over sample-and-filter (23.0
+  against 22.3) is not significant; its single-run win over self-debugging shrank to calls.
+  \item \textbf{A small model as the proposer in puzzles.} On Countdown and Blocks world the 4B models' guesses were
+  worse starting points than a neutral one: neo4d's search alone beat the core with a model in every setting.
   \item \textbf{The law on repeated, clean work.} On the agent tasks no rule beat any other; the law's value appears
   only when lessons can be wrong.
   \item \textbf{Helping a model that already knows.} Haiku fixed all 31 real bugs at the first submission with or
@@ -382,8 +432,9 @@ gemma3:4b, marks on suspect lines & 13 & 14 & 97\\
 
 \section{Threats to validity}
 The benchmarks are small (31, 85, 176 tasks). Most configurations were run once; the noisy teacher, the random
-control and the equal-budget baselines have seeds, and the baselines show that a single-run difference of three bugs
-can vanish. QuixBugs is public, and every model may have seen it; the hard set reduces but does not remove recall. Two
+control, the equal-budget baselines and the core on other domains have seeds, and the baselines show that a single-run
+difference of three bugs can shrink. The non-code domains are generated puzzles, chosen and adjusted in two recorded
+design runs before the reported seeds. QuixBugs is public, and every model may have seen it; the hard set reduces but does not remove recall. Two
 benchmarks inject bugs with the same operators neo4d uses to repair, which favours neo4d's memory and search; the
 real-bug and agent results do not have this circularity in the bug itself. The agent tasks recur by design, which is
 where plans pay. The phi4-mini agent run was made before plan ties were ordered deterministically. The assistant that
@@ -404,14 +455,15 @@ CBMC~\cite{cbmc}.
 \section{Conclusion}
 A model need not be exactly right if something beside it can search exactly and remember. Under a law whose
 behaviour is proved over its whole input space and which keeps memory clean when a teacher is wrong, neo4d doubles a
-small model on agent work, takes a third or more of repeated work off large models at equal accuracy, matches strong
-equal-budget baselines on real bugs with fewer calls, and makes a model useful as a cheap filter for a search it could
-not run itself. It does not make a model reason better by advising it, and it cannot create a skill no one has shown it. Next: the equal-budget runs for more seeds and models, coverage-guided search on large files, and SWE-bench, whose agent and guide are released with the code.
+small model on agent work, takes a third or more of repeated work off large models at equal accuracy, beats strong
+equal-budget baselines on real bugs with one small model (and matches them with another) using fewer calls, carries
+unchanged to domains that are not code, and makes a model useful as a cheap filter for a search it could not run
+itself. It does not make a model reason better by advising it, and it cannot create a skill no one has shown it. Next: a stronger proposer on the non-code domains, coverage-guided search inside the agent, and SWE-bench, whose agent and guide are released with the code.
 
 \paragraph{Reproducibility.} \sloppy Every number comes from a command in the repository: \texttt{neo4d local-model},
 \texttt{local-agent} (with \texttt{--agent-score sonnet,haiku}), \texttt{local-hints} (with \texttt{--loop},
 \texttt{--focus}, \texttt{--search-score}), \texttt{python -m neo4d.rigor} (\texttt{--law}, \texttt{--agent},
-\texttt{--random}, \texttt{--baselines}). Every action of the Claude subagents and every local run is in
+\texttt{--random}, \texttt{--baselines}), \texttt{python -m neo4d.core\_experiment}. Every action of the Claude subagents and every local run is in
 \texttt{results/data/}.
 
 \paragraph{Use of AI.} The implementation, experiments and text were produced with Claude Code (Anthropic) under the
