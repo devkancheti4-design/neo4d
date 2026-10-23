@@ -54,6 +54,9 @@ WORK = Path(os.environ.get("DECISIVE_DIR", REPO / ".build" / "decisive"))
 BASE = "Qwen/Qwen2.5-Coder-0.5B-Instruct"
 POOL, FIRST, BUDGET, KEEP = 64, 16, 64, 4
 ARMS = ("sample16", "sample64", "neo4d", "neo4d_ship")
+# run 2 - neo4d with freedom, on the tasks even 64 samples missed (designed after run 1; both runs are reported)
+MORE, FREE, BEAM = 192, 2000, 8
+ARMS2 = ("sample64", "sample256", "neo4d_free", "neo4d_free_ship")
 SEEDS = (0, 1, 2)
 TIMEOUT = 5.0
 TAIL = "Reply with the complete Python function in one ```python code block."
@@ -279,6 +282,86 @@ def _search(args):
     return search_task(*args)
 
 
+def search_free(task, failing, budget=FREE, beam=BEAM):
+    """neo4d with freedom on one task no sample solved: the closest misses first (most asserts passed), every
+    single-token change on the lines the asserts run in PICK's order, and a second level - a variant that passes more
+    asserts than the program it came from is mutated again. Up to `budget` runs of the asserts, no model call.
+    -> dict(greens, verdict, tried, ...)"""
+    from neo4d import domain_mutation as D
+    from neo4d import local_model as LM
+    from neo4d import relations as R
+    from neo4d import swe_full as F
+    seen, greens, tried, cold = set(), [], 0, Counter()
+    frontier, firsts = [], set()
+    for s in sorted(failing, key=lambda s: (-sum(s["passed"]), s["i"])):
+        if norm(s["code"]) not in firsts:
+            firsts.add(norm(s["code"]))
+            frontier.append(dict(code=s["code"], passed=s["passed"], level=0, origin=s["i"]))
+        if len(frontier) == beam:
+            break
+    for level in (1, 2):
+        nxt = []
+        share = max(1, (budget - tried) // max(1, len(frontier)) // (3 - level))
+        for s in frontier:
+            src, spent = s["code"], 0
+            try:
+                code_lines = set(LM.code_lines(src))
+            except SyntaxError:
+                continue
+            _, hits = run_tests(src, task["setup"], task["tests"], trace=True)
+            executed = {i for i in code_lines if (i + 1) in hits}
+            lines = src.split("\n")
+            cands = []
+            for i in sorted(code_lines):
+                for m, op in D.mutants(R.toks(lines[i])).items():
+                    new = LM.to_text(lines[i], list(m))
+                    var = "\n".join(lines[:i] + [new] + lines[i + 1:])
+                    if new != lines[i] and var not in seen:
+                        seen.add(var)
+                        cands.append(dict(text=var, line=i, kind=op, trusted=False))
+            while cands and spent < share and tried < budget:
+                scored = [(F.pick(F.pick_word(c, executed, set(), cold)), c) for c in cands]
+                scored = [(r, c) for r, c in scored if r > 0]
+                if not scored:
+                    break
+                _, c = min(scored, key=lambda rc: (-rc[0], rc[1]["line"]))
+                cands.remove(c)
+                try:
+                    ast.parse(c["text"])
+                except SyntaxError:
+                    continue
+                res, _ = run_tests(c["text"], task["setup"], task["tests"])
+                tried, spent = tried + 1, spent + 1
+                if all(res):
+                    stable = all(run_tests(c["text"], task["setup"], task["tests"])[0])
+                    greens.append(dict(code=c["text"], stable=stable, level=level, origin=s["origin"], kind=c["kind"]))
+                elif sum(res) > sum(s["passed"]):
+                    nxt.append(dict(code=c["text"], passed=res, level=level, origin=s["origin"]))
+                else:
+                    cold[c["kind"]] += 1
+        if greens:
+            break
+        frontier = sorted(nxt, key=lambda s: -sum(s["passed"]))[:beam]
+        if not frontier:
+            break
+    calls = probes(task["tests"])
+    for g in greens:
+        g["behaviour"] = list(behaviour(g["code"], task["setup"], calls) if calls else (g["code"],))
+    distinct = {tuple(g["behaviour"]) for g in greens if g["stable"]}
+    verdict = None
+    if greens:
+        g = greens[0]
+        x = (F.WAS_RED | F.GREEN | F.STABLE * g["stable"] | F.UNIQUE * (g["stable"] and len(distinct) == 1)
+             | F.THIN * (len(task["tests"]) <= 1) | F.ROUTED)
+        verdict = F.ship(x)
+    return dict(task_id=task["task_id"], greens=greens, distinct=len(distinct), verdict=verdict, tried=tried,
+                levels=sorted({g["level"] for g in greens}))
+
+
+def _search_free(args):
+    return search_free(*args)
+
+
 # ------------------------------------------------------------------------------------------------ the commands
 
 def cmd_sample(a):
@@ -324,6 +407,43 @@ def cmd_search(a):
     print(f"neo4d searched {len(found)} tasks no 16 samples solved: {sum(bool(f['greens']) for f in found)} with a green "
           f"program, {sum(f['verdict'] in (2, 3) for f in found)} certified by SHIP; "
           f"{sum(f['tried'] for f in found)} trials")
+
+
+def unsolved64():
+    by = defaultdict(list)
+    for r in jl(WORK / "pool_checked.jsonl"):
+        by[r["task_id"]].append(r)
+    return {k: v for k, v in by.items() if not any(all(r["passed"]) for r in v)}
+
+
+def cmd_sample_more(a):
+    """Sampling's answer to run 2: 192 more samples (seed 1) for every task 64 samples missed - 256 in all."""
+    from vllm import LLM, SamplingParams
+    tasks = {t["task_id"]: t for t in jl(WORK / "tasks.jsonl")}
+    todo = sorted(unsolved64())
+    llm = LLM(model=a.base, seed=1, gpu_memory_utilization=0.85, max_model_len=2048)
+    outs = llm.chat([[{"role": "user", "content": prompt_mbpp(tasks[k]["text"], tasks[k]["tests"][0])}] for k in todo],
+                    SamplingParams(n=MORE, temperature=0.8, top_p=0.95, max_tokens=512, seed=1))
+    rows = [dict(task_id=k, i=POOL + j, code=code_of(o.text)) for k, out in zip(todo, outs) for j, o in enumerate(out.outputs)]
+    with ProcessPoolExecutor(a.jobs) as ex:
+        res = list(ex.map(_check, [(r["code"], tasks[r["task_id"]]["setup"], tasks[r["task_id"]]["tests"]) for r in rows],
+                          chunksize=32))
+    for r, p in zip(rows, res):
+        r["passed"] = p
+    wjl(WORK / "pool_more_checked.jsonl", rows)
+    solved = {r["task_id"] for r in rows if all(r["passed"])}
+    print(f"{len(todo)} tasks 64 samples missed; 192 more samples each solve {len(solved)}")
+
+
+def cmd_search_free(a):
+    tasks = {t["task_id"]: t for t in jl(WORK / "tasks.jsonl")}
+    todo = [(tasks[k], v) for k, v in sorted(unsolved64().items())]
+    with ProcessPoolExecutor(a.jobs) as ex:
+        found = list(ex.map(_search_free, todo, chunksize=1))
+    wjl(WORK / "search_free.jsonl", found)
+    print(f"neo4d with freedom on {len(found)} tasks 64 samples missed: {sum(bool(f['greens']) for f in found)} with a "
+          f"green program ({sum(2 in f['levels'] for f in found)} needing two levels), "
+          f"{sum(f['verdict'] in (2, 3) for f in found)} certified by SHIP; {sum(f['tried'] for f in found)} trials")
 
 
 def norm(code):
@@ -385,6 +505,45 @@ def cmd_datasets(a):
     print(json.dumps(sizes), dict(refuted))
 
 
+def cmd_datasets_free(a):
+    tasks = {t["task_id"]: t for t in jl(WORK / "tasks.jsonl")}
+    base = jl(WORK / "data" / "sample64.jsonl")
+    more = defaultdict(list)
+    for r in jl(WORK / "pool_more_checked.jsonl"):
+        more[r["task_id"]].append(r)
+    free = {f["task_id"]: f for f in jl(WORK / "search_free.jsonl")}
+
+    def ex(tid, codes, how):
+        t = tasks[tid]
+        return [dict(task_id=tid, prompt=prompt_mbpp(t["text"], t["tests"][0]), code=c, how=how) for c in codes]
+    arms = {arm: list(base) for arm in ARMS2 if arm != "sample64"}
+    for tid in sorted(set(more) | set(free)):
+        seen, codes = set(), []
+        for r in sorted(more.get(tid, []), key=lambda r: r["i"]):
+            if all(r["passed"]) and norm(r["code"]) not in seen:
+                seen.add(norm(r["code"]))
+                codes.append(r["code"])
+        arms["sample256"] += ex(tid, codes[:KEEP], "sample")
+        f = free.get(tid)
+        if f and f["greens"]:
+            seen, mut = set(), []
+            for g in f["greens"]:
+                if g["stable"] and norm(g["code"]) not in seen:
+                    seen.add(norm(g["code"]))
+                    mut.append(g["code"])
+            arms["neo4d_free"] += ex(tid, mut[:KEEP], "neo4d")
+            if f["verdict"] in (2, 3):
+                arms["neo4d_free_ship"] += ex(tid, mut[:1], "neo4d")
+    for arm, rows in arms.items():
+        wjl(WORK / "data" / f"{arm}.jsonl", rows)
+    sizes = {arm: dict(examples=len(rows), tasks=len({r["task_id"] for r in rows}),
+                       added=len(rows) - len(base), added_tasks=len({r["task_id"] for r in rows}) - len({r["task_id"] for r in base}))
+             for arm, rows in arms.items()}
+    sizes["sample64"] = dict(examples=len(base), tasks=len({r["task_id"] for r in base}), added=0, added_tasks=0)
+    (WORK / "data" / "sizes_free.json").write_text(json.dumps(sizes, indent=1))
+    print(json.dumps(sizes))
+
+
 def _agree(args):
     code, ref, task = args
     calls = probes(task["tests"])
@@ -427,6 +586,33 @@ def cmd_purity(a):
         certified=dict(agree=sum(bool(r["agrees"]) for r in rescued if r["certified"]), of=sum(r["certified"] for r in rescued)),
         refused=dict(agree=sum(bool(r["agrees"]) for r in rescued if not r["certified"]), of=sum(not r["certified"] for r in rescued)))
     (WORK / "data" / "purity.json").write_text(json.dumps(out, indent=1))
+    print(json.dumps(out, indent=1))
+
+
+def cmd_purity_free(a):
+    """Run 2's purity: as cmd_purity, against MBPP's reference, for what each arm adds beyond sample64."""
+    from datasets import load_dataset
+    ref = {}
+    for split in ("prompt", "train", "validation"):
+        for x in load_dataset("google-research-datasets/mbpp", "full", split=split):
+            ref[int(x["task_id"])] = x["code"]
+    tasks = {t["task_id"]: t for t in jl(WORK / "tasks.jsonl")}
+    s64 = {(r["task_id"], norm(r["code"])) for r in jl(WORK / "data" / "sample64.jsonl")}
+    out = {}
+    for arm in ARMS2[1:]:
+        rows = [r for r in jl(WORK / "data" / f"{arm}.jsonl") if (r["task_id"], norm(r["code"])) not in s64]
+        with ProcessPoolExecutor(a.jobs) as ex:
+            agree = [x for x in ex.map(_agree, [(r["code"], ref[r["task_id"]], tasks[r["task_id"]]) for r in rows],
+                                       chunksize=4) if x is not None]
+        out[arm] = dict(agree=sum(agree), of=len(agree))
+    firsts = []
+    for f in jl(WORK / "search_free.jsonl"):
+        for g in f["greens"][:1]:
+            firsts.append((f["verdict"] in (2, 3), _agree((g["code"], ref[f["task_id"]], tasks[f["task_id"]]))))
+    out["neo4d_free first green per task"] = dict(
+        certified=dict(agree=sum(bool(ok) for c, ok in firsts if c), of=sum(c for c, _ in firsts)),
+        refused=dict(agree=sum(bool(ok) for c, ok in firsts if not c), of=sum(not c for c, _ in firsts)))
+    (WORK / "data" / "purity_free.json").write_text(json.dumps(out, indent=1))
     print(json.dumps(out, indent=1))
 
 
@@ -567,12 +753,64 @@ def cmd_report(a):
     print("\n".join(lines))
 
 
+def cmd_report_free(a):
+    sizes = json.loads((WORK / "data" / "sizes_free.json").read_text())
+    pu = json.loads((WORK / "data" / "purity_free.json").read_text()) if (WORK / "data" / "purity_free.json").exists() else {}
+    free = jl(WORK / "search_free.jsonl")
+    more = jl(WORK / "pool_more_checked.jsonl")
+    fmt = lambda d: f"{d['agree']}/{d['of']} ({100 * d['agree'] / d['of']:.0f}%)" if d and d.get("of") else "-"
+    lines = ["", "## Run 2 - neo4d with freedom, on the tasks 64 samples missed", "",
+             f"Designed after run 1 (both are reported). {len(free)} tasks no sample of 64 solved. neo4d: the closest misses "
+             f"of all 64 samples first, two levels of single-token search (a variant passing more asserts is mutated "
+             f"again), up to {FREE} runs of the asserts per task, PICK ordering, SHIP certifying; no model call. "
+             f"Sampling: {MORE} more samples per task (256 in all).", "",
+             f"- neo4d: {sum(bool(f['greens']) for f in free)} tasks with a green program "
+             f"({sum(2 in f['levels'] for f in free)} needing two levels), {sum(f['verdict'] in (2, 3) for f in free)} "
+             f"certified by SHIP, in {sum(f['tried'] for f in free)} runs of the asserts and 0 model calls.",
+             f"- sampling: {len({r['task_id'] for r in more if all(r['passed'])})} tasks solved by {len(more)} more samples "
+             f"({len(more)} model generations and as many runs of the asserts).", "",
+             "| arm | examples | added beyond sample64 (tasks) | added programs like the reference | HumanEval+ (per seed) | mean | MBPP+ (per seed) | mean |",
+             "|---|---|---|---|---|---|---|---|"]
+    table = {}
+    for arm in ("base",) + ARMS2:
+        names = ["base"] if arm == "base" else [f"{arm}_s{s}" for s in SEEDS]
+        table[arm] = {b: [per_task(n, b) for n in names if (WORK / "samples" / f"{n}_{b}_eval_results.json").exists()]
+                      for b in ("humaneval", "mbpp")}
+        sz = sizes.get(arm, dict(examples=0, added=0, added_tasks=0))
+        cells = []
+        for b in ("humaneval", "mbpp"):
+            vals = [sum(v[1] for v in g.values()) for g in table[arm][b]]
+            n = len(table[arm][b][0]) if table[arm][b] else 0
+            cells += [" / ".join(map(str, vals)) or "-",
+                      f"{sum(vals) / len(vals):.1f} ({100 * sum(vals) / len(vals) / n:.1f}%)" if vals else "-"]
+        lines.append(f"| {arm} | {sz.get('examples', '-')} | {sz.get('added', 0)} ({sz.get('added_tasks', 0)}) | "
+                     f"{fmt(pu.get(arm))} | " + " | ".join(cells) + " |")
+    lines += ["", "Paired permutation tests per problem (pass rates averaged over seeds):", ""]
+    for arm in ("neo4d_free", "neo4d_free_ship"):
+        for ref in ("sample64", "sample256"):
+            for b in ("humaneval", "mbpp"):
+                A, B = table[arm][b], table[ref][b]
+                if not A or not B:
+                    continue
+                keys = sorted(A[0])
+                xa = [sum(g[k][1] for g in A) / len(A) for k in keys]
+                xb = [sum(g[k][1] for g in B) / len(B) for k in keys]
+                lines.append(f"- {arm} against {ref}, {b}: {sum(xa) - sum(xb):+.2f} problems, p = {permutation_p(xa, xb):.3f}")
+    r = pu.get("neo4d_free first green per task", {})
+    lines += ["", f"neo4d's first green program per task, against MBPP's reference: SHIP-certified {fmt(r.get('certified'))}; "
+              f"refused by SHIP {fmt(r.get('refused'))}."]
+    with open(REPO / "results" / "DECISIVE.md", "a") as f:
+        f.write("\n".join(lines) + "\n")
+    print("\n".join(lines))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(prog="neo4d.decisive")
     ap.add_argument("cmd", choices=("sample", "check", "search", "datasets", "purity", "train", "generate", "evaluate",
-                                    "report"))
+                                    "report", "sample_more", "search_free", "datasets_free", "purity_free",
+                                    "report_free"))
     ap.add_argument("--base", default=BASE)
-    ap.add_argument("--arm", default="base", choices=("base",) + ARMS)
+    ap.add_argument("--arm", default="base", choices=("base",) + ARMS + ARMS2[1:])
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--jobs", type=int, default=os.cpu_count() or 4)
     a = ap.parse_args()
